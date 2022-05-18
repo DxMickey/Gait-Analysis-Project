@@ -1,7 +1,7 @@
 # Andrii_B_MSc_Python_Code
 Python code from TalTech MSc Andrii Boryshkevych
 
------------------------------------------------------------------------AndriiMSc_Number_of_Peaks.py--------------------------------------------------------------------
+--------------------------------------------AndriiMSc_Number_of_Peaks.py--------------------------------------------
 
 This piece of code was specifically used to calculate the number of peaks that were occuring at single gait event area. This phenomena can be clearly seen in the Figure 4.3 in the Thesis work.
 
@@ -18,9 +18,9 @@ There are additional functions in the code, such as: Plot, DefineArray and Actua
 **NB!IMPORTANT**
 Note that the code is built in a way that excel files are to be improted fo analysis. Initially sensor's data is avaliable as .txt file and has to be transferred to excel first. Once imported to excel, dataset has 13 columns each representing the specific measurement from the build in into device sensors. First thing that has to be done is to add 1 additional column that should be put before column that represents the time stamps (column A in excel). Then in the first new column time stamps have to be converted into seconds, to do that use the following equiation: "B1/1000-$B$1/1000". Next the TOTAL ACCELERATION or MAGNITUDE OF THE ACCELERATION VECTOR has to be calculated (see formula 3.2 in the thesis text). The following equation has to be inserted to the column O in Excel (15th column): "SQRT((F1^2)+(G1^2)+(H1^2))". Once these two steps are done excel file is ready to be imported and processed with the code. The whole procedure is also explained in the thesis text in section "Pilot study 1".
 
------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------AndriiMSc_Phase_Shift_Solver.py-----------------------------------------------------------------
+--------------------------------------------AndriiMSc_Phase_Shift_Solver.py--------------------------------------------
 
 This piece of code was used in order to find optimal parameters for S-G filter. Results of utilization of this code are presented in section 4.3 of the thesis.
 Basically, increase in the window length of the filter causes the peak shift from the initial peak(in the raw data).
@@ -36,9 +36,9 @@ Since only first gait event was the region of interest for this study, function 
 The outcome of the Peaks function is the distance between the HIGHEST peak the original data and the HIGHEST peak in the filtered data.
 Functions ShiftCheck and SingleGraph were added as a tool to simplify the process of introducing limits to the Peaks function. To see the results of calcutaion command "all_results" should be used.
 
------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------AndriiMSc_General_Motif.py-----------------------------------------------------------------
+--------------------------------------------AndriiMSc_General_Motif.py--------------------------------------------
 
 This piece of code was used in order to check the efficiency of General Motif approach. The idea of this apporach is covered in section 3.4 (specfically - Novel gait analysis data processing). Results are discussed in section 4.4 of the thesis.
 
@@ -60,9 +60,9 @@ The Threshold for peaks identification is specified automatically based on the s
 Once everything is specified and code is executed, as an outcome appears a graph with filtered data marked as blue and identified motif overlayed over it in orange. An array with peaks identified in the found Motif is also printed above the graph. An example can be found in Figure 3.16 in the thesis text.
 
 
------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------AndriiMSc_Subject-Based_Motif.py----------------------------------------------------------------
+--------------------------------------------AndriiMSc_Subject-Based_Motif.py--------------------------------------------
 
 This piece of code was used in order to check the efficiency of Subject-Based Motif approach. The idea of this apporach is covered in section 3.4 (specfically - Novel gait analysis data processing). Results are discussed in section 4.4 of the thesis.
 
@@ -82,4 +82,4 @@ Once done, Motif is defined (lines 82 - 95). For that an input from the user is 
 
 The rest of the code is executed automatically. Comments in the code will help to understand the conesuent specific steps. The outcome of the execution is identical to the General Motif approach shown in Figure 3.16 in the thesis text. 
 
------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------
