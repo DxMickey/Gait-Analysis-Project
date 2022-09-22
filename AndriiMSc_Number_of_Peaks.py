@@ -1,6 +1,8 @@
+import enum
 import pandas as pd
 import os
 
+from calculations import *
 from scipy.signal import find_peaks
 from scipy.signal import savgol_filter
 from matplotlib import pyplot as plt
@@ -8,10 +10,10 @@ from matplotlib import pyplot as plt
 plt.rcParams["figure.figsize"] = [30,15]
 plt.rcParams['xtick.direction'] = 'out'
 
-#specify path to the directory with files
-path = r''
+#specify path to the directory with files (same folder as this script by default)
+path = r'.' 
 files = os.listdir(path)
-
+NR_OF_FILES_TO_ANALYZE = 1
 i = 0
 acceleration = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 new_acceleration = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
@@ -55,9 +57,29 @@ def SavGol_39 (i):
 
 #uploading the files    
 for file in files:
-    if file.endswith(".xlsx") and file.startswith(location):
-        df = pd.read_excel(os.path.join(path, file))
-        df.columns = ['time','stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz','averagea']
+    if file.endswith(".csv"): # and file.startswith(location) //the file starts with the above mentioned possible location i.e shank_06
+        df = pd.read_csv(os.path.join(path, file))
+        df.columns = ['stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz']
+        
+        print(df)
+        #Calculate magnitudes
+        magnitudes = []
+        for idx,x in enumerate( df['ax']):
+            y = df['ay'][idx]
+            z = df['az'][idx]
+            magnitudes.append(calculateMagnitude(x,y,z))
+        #Add averagea column with the calculated data
+        df.insert(len(df.columns),"averagea" ,magnitudes)
+        
+        #Calculate timestamps
+        beginTime = df['stamp'][0]
+        timestamps = []
+        for idx,stamp in enumerate(df['stamp']):
+            timestamps.append(timeStampToSeconds(stamp,beginTime))
+        #Insert the calculated times
+        df.insert(0,'time',timestamps)
+        print(df)
+        print(i)
         acceleration[i] = df.averagea
         time[i] = df.time
         acceleration_29[i] = SavGol_39(i)
@@ -66,19 +88,19 @@ for file in files:
 
 #find the peaks in raw data (HSs)
 i = 0
-for i in range(0,5):
+for i in range(0,NR_OF_FILES_TO_ANALYZE):
     peaks,_ = find_peaks(acceleration[i], height=30)
     peaks_array_higher[i]=peaks
     i += 1
 #find the peaks in raw data
 i = 0
-for i in range(0,5):
+for i in range(0,NR_OF_FILES_TO_ANALYZE):
     peaks,_ = find_peaks(acceleration[i], height=y)
     peaks_array_lower[i]=peaks
     i += 1
 #find all peaks in the filtered data    
 i = 0
-for i in range (0,5):
+for i in range (0,NR_OF_FILES_TO_ANALYZE):
     peaks,_ = find_peaks(acceleration_29[i], height=y)
     peaks_array_filtered[i]=peaks
     i += 1
@@ -132,3 +154,4 @@ def ActualLength(i,start,end):
     peaks,_ = find_peaks(acceleration_29[i][start-3:end+3], height=16)
     print("Number of peaks in Filtered data: " + str(len(peaks)))
 
+Peaks(0)
