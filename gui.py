@@ -1,14 +1,20 @@
+from posixpath import split
 import tkinter as tk
 from tkinter import filedialog
 from turtle import position
 import AndriiMSc_Number_of_Peaks as peaks
 import os
 
+from database import database
+
+# Table name that the user chose to save into database
+chosen_File_Name = "test"
 
 root = tk.Tk()
 root.title("Gait Analysis")
 root.geometry("400x500")
 root.config(bg="lightgray")
+
 
 def runCode():
     i = 0
@@ -18,6 +24,9 @@ def runCode():
         tk.messagebox.showinfo("Gait analysis",  "Choose file number " + (str)(i + 1))
         filesList.append(filedialog.askopenfilename())
         i += 1
+        
+        database(chosen_File_Name)
+
     peaks.main(options.get(), filesList)
 
 
