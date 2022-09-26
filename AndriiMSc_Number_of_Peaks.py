@@ -1,3 +1,4 @@
+from sqlite3 import connect
 import pandas as pd
 import os
 
@@ -80,6 +81,10 @@ def main(sensorLocation, files = []):
             time[i] = df.time
             acceleration_29[i] = SavGol_39(i)
             i += 1
+            conn = connect("oldData.db")
+            tableName = "test"
+            df.to_sql(name=tableName, con=conn, if_exists='append', index=False)
+            conn.close()
             
 
     #find the peaks in raw data (HSs)
@@ -151,7 +156,7 @@ def main(sensorLocation, files = []):
         print("Number of peaks in Filtered data: " + str(len(peaks)))
 
     Peaks(0)
-
+    
 # this won't be run when imported
 if __name__ == "__main__":
     main()

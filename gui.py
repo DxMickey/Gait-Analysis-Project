@@ -29,6 +29,9 @@ def runCode():
 
     peaks.main(options.get(), filesList)
 
+def getChosenName():
+    return chosen_File_Name
+
 
 btn_run = tk.Button(
     text="Analyse new data",

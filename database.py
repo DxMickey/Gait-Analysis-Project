@@ -2,13 +2,10 @@ from msilib.schema import Error
 import sqlite3
 
 
-import sqlite3
-
-
 def database(name):
     conn = connect("oldData.db")
     createTable(conn, name)
-    insertData(conn, name)
+    #insertData(conn, name)
 
 # Connect to database file
 def connect(dbFile):
@@ -22,7 +19,8 @@ def connect(dbFile):
 def createTable(conn, name):
     try:
         cur = conn.cursor()
-        cur.execute("CREATE TABLE IF NOT EXISTS {} (stamp DECIMAL, battery DECIMAL, pressure DECIMAL, temperature DECIMAL, ax DECIMAL, ay DECIMAL, az DECIMAL, gx DECIMAL, gy DECIMAL, gz DECIMAL, mx DECIMAL, my DECIMAL, mz DECIMAL);".format(name))
+        cur.execute("CREATE TABLE IF NOT EXISTS {} (time DECIMAL, stamp DECIMAL, battery DECIMAL, pressure DECIMAL, temperature DECIMAL, ax DECIMAL, ay DECIMAL, az DECIMAL, gx DECIMAL, gy DECIMAL, gz DECIMAL, mx DECIMAL, my DECIMAL, mz DECIMAL, averagea DECIMAL);".format(name))
+        conn.close()
     except Error as e:
         print(e)
 
