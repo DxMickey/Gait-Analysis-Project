@@ -57,34 +57,34 @@ def main(sensorLocation, files = []):
 
     #uploading the files    
     for file in files:
-        if file.endswith(".csv"): # and file.startswith(location) //the file starts with the above mentioned possible location i.e shank_06
-            df = pd.read_csv(file)
-            df.columns = ['stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz']
+        
+        df = pd.read_csv(file)
+        df.columns = ['stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz']
             
-            #Calculate magnitudes
-            magnitudes = []
-            for idx,x in enumerate( df['ax']):
-                y = df['ay'][idx]
-                z = df['az'][idx]
-                magnitudes.append(calculateMagnitude(x,y,z))
-            #Add averagea column with the calculated data
-            df.insert(len(df.columns),"averagea" ,magnitudes)
+        #Calculate magnitudes
+        magnitudes = []
+        for idx,x in enumerate( df['ax']):
+            y = df['ay'][idx]
+            z = df['az'][idx]
+            magnitudes.append(calculateMagnitude(x,y,z))
+        #Add averagea column with the calculated data
+        df.insert(len(df.columns),"averagea" ,magnitudes)
             
-            #Calculate timestamps
-            beginTime = df['stamp'][0]
-            timestamps = []
-            for idx,stamp in enumerate(df['stamp']):
-                timestamps.append(timeStampToSeconds(stamp,beginTime))
-            #Insert the calculated times
-            df.insert(0,'time',timestamps)
-            acceleration[i] = df.averagea
-            time[i] = df.time
-            acceleration_29[i] = SavGol_39(i)
-            i += 1
-            conn = connect("oldData.db")
-            tableName = "test"
-            df.to_sql(name=tableName, con=conn, if_exists='append', index=False)
-            conn.close()
+        #Calculate timestamps
+        beginTime = df['stamp'][0]
+        timestamps = []
+        for idx,stamp in enumerate(df['stamp']):
+            timestamps.append(timeStampToSeconds(stamp,beginTime))
+        #Insert the calculated times
+        df.insert(0,'time',timestamps)
+        acceleration[i] = df.averagea
+        time[i] = df.time
+        acceleration_29[i] = SavGol_39(i)
+        i += 1
+        conn = connect("oldData.db")
+        tableName = "test"
+        df.to_sql(name=tableName, con=conn, if_exists='append', index=False)
+        conn.close()
             
 
     #find the peaks in raw data (HSs)
