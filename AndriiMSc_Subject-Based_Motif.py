@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
+from calculations import addCols
 from scipy.signal import find_peaks
 import stumpy
 import os
-
+import sys
 from scipy.signal import savgol_filter
 from matplotlib import pyplot as plt
 
@@ -13,9 +14,11 @@ plt.rcParams['xtick.direction'] = 'out'
 plt.rcParams["font.size"] = '20'
 
 #upload the data
-Ref_path = r''
+Ref_path = sys.argv[2]
+Data_path = sys.argv[1]
 Ref_files = os.listdir(Ref_path)
-
+Data_files = os.listdir(Data_path)
+NR_OF_FILES = len(Data_files)
 i = 0
 Ref_acceleration = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 acceleration = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
@@ -32,10 +35,10 @@ Resam_Acc = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 Chopped_Acc = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 distance_profile_array = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 
-Ref_Location = 'Ankle'
+Ref_Location = 'Foot'
 location = Ref_Location
 name = "Subject 1"
-
+NR_OF_FILES = 1
 #SavGol funciton to define motif
 def Ref_SavGol_39 (i):
     #applying the Sav_Gol filter
@@ -46,8 +49,9 @@ def Ref_SavGol_39 (i):
 
 #upload the data into Python environment
 for Ref_file in Ref_files:
-    if Ref_file.endswith(".xlsx") and Ref_file.startswith(Ref_Location):
-        Ref_df = pd.read_excel(os.path.join(Ref_path, Ref_file))
+    if Ref_file.endswith(".txt"):
+        Ref_df = pd.read_csv(os.path.join(Ref_path,Ref_file))
+        addCols(Ref_df)
         Ref_df.columns = ['time','stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz','averagea']
         Ref_acceleration[i] = Ref_df.averagea
         time[i] = Ref_df.time
@@ -109,22 +113,23 @@ def PlotMatch(i):
     plt.legend()
     plt.show()
 
-path = Ref_path
-files = os.listdir(path)
+path = Data_path
+# files = os.listdir(path)
 name = path.split('\\')
 name = name[-1]
 #Upload the data and apply Sav_Gol filter upon it
 i = 0
-for file in files:
-    if file.endswith(".xlsx") and file.startswith(location):
-        df = pd.read_excel(os.path.join(path, file))
+for file in Data_files:
+    if file.endswith(".txt"):
+        df = pd.read_csv(os.path.join(Data_path,file))
+        addCols(df)
         df.columns = ['time','stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz','averagea']
         acceleration[i] = SavGol_39(i)
         i += 1
 
 #Run the matrix profiling through all datasets        
 i = 0
-for i in range (0,10):
+for i in range (0,NR_OF_FILES):
     distance_profile = stumpy.mass(gaitCyclePattern, acceleration[i])
     distance_profile_array[i] = distance_profile
     indx = np.argmin(distance_profile)
@@ -133,21 +138,21 @@ for i in range (0,10):
 
 #Chop out the Motif
 i = 0
-for i in range(0,10):
+for i in range(0,NR_OF_FILES):
     profile_match = acceleration[i][indx_array[i]:indx_array[i]+len(gaitCyclePattern)]
     profile_match_array[i] = profile_match
     i+=1
 
 #find peaks in the chopped Motif
 i = 0
-for i in range (0,10):
+for i in range (0,NR_OF_FILES):
     peaks,_ = find_peaks(profile_match_array[i], height=y)
     peaks_array_filtered[i]=peaks
     NumOfPeaks[i] = len(peaks)
     i+=1
 #plot every dataset with peaks array
 i = 0
-for i in range (0,10):
+for i in range (0,NR_OF_FILES):
     PlotMatch(i)
     print('Peaks: ', peaks_array_filtered[i])
     print('Number of Peaks in Profile Match: ', NumOfPeaks[i])
