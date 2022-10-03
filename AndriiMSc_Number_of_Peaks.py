@@ -11,9 +11,12 @@ plt.rcParams['xtick.direction'] = 'out'
 
 
 #Read files from command line
-data_path = sys.argv[1]
-files = os.listdir(data_path)
-NR_OF_FILES = len(files)
+#First argument is data path
+# data_path = sys.argv[1]
+# files = os.listdir(data_path)
+
+files = [sys.argv[1]]
+NR_OF_FILES = 1#len(files)
 #specify path to the directory with files
 
 i = 0
@@ -64,7 +67,8 @@ def SavGol_39 (i):
 # for file in files:
     # if file.endswith(".txt") : #and file.startswith(location)
 for file in files:
-    df = pd.read_csv(os.path.join(data_path,file))
+    #os.path.join(data_path,file)
+    df = pd.read_csv(file)
     df = addCols(df)
     acceleration[i] = df.averagea
     time[i] = df.time
@@ -142,5 +146,8 @@ def ActualLength(i,start,end):
     print("Number of peaks in Raw data: " + str(len(peaks)))
     peaks,_ = find_peaks(acceleration_29[i][start-3:end+3], height=16)
     print("Number of peaks in Filtered data: " + str(len(peaks)))
+
+
 Peaks(0)
+
 

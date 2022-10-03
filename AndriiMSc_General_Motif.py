@@ -62,7 +62,7 @@ for Ref_file in Ref_files:
 #SHANK
 #gaitCyclePattern = Ref_Acceleration_39[0][556:921] #single dataset
 #FOOT
-gaitCyclePattern = Ref_Acceleration_39[0][660:760] #single dataset
+gaitCyclePattern = Ref_Acceleration_39[0][680:820] #single dataset
 
 #---------------------------------------------------------Matrix Profiling-------------------------------------------------------------#
 
@@ -82,7 +82,7 @@ def PlotMatch(i):
     plt.show()
 
 path = r'./data'
-files = [sys.argv[2]]
+files = [sys.argv[1]]
 
 location = 'S(6'
 name = path.split('\\')

@@ -14,10 +14,12 @@ plt.rcParams['xtick.direction'] = 'out'
 plt.rcParams["font.size"] = '20'
 
 #upload the data
-Ref_path = sys.argv[2]
+#Ref_path = sys.argv[2]
 Data_path = sys.argv[1]
-Ref_files = os.listdir(Ref_path)
-Data_files = os.listdir(Data_path)
+
+#Ref file same as data file for now
+Ref_files = [sys.argv[1]]#os.listdir(Ref_path)
+Data_files = [sys.argv[1]]#os.listdir(Data_path)
 NR_OF_FILES = len(Data_files)
 i = 0
 Ref_acceleration = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
@@ -50,7 +52,8 @@ def Ref_SavGol_39 (i):
 #upload the data into Python environment
 for Ref_file in Ref_files:
     if Ref_file.endswith(".txt"):
-        Ref_df = pd.read_csv(os.path.join(Ref_path,Ref_file))
+        #os.path.join(Ref_path,Ref_file)
+        Ref_df = pd.read_csv(Ref_file)
         addCols(Ref_df)
         Ref_df.columns = ['time','stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz','averagea']
         Ref_acceleration[i] = Ref_df.averagea
@@ -121,7 +124,8 @@ name = name[-1]
 i = 0
 for file in Data_files:
     if file.endswith(".txt"):
-        df = pd.read_csv(os.path.join(Data_path,file))
+        #os.path.join(Data_path,file)
+        df = pd.read_csv(file)
         addCols(df)
         df.columns = ['time','stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz','averagea']
         acceleration[i] = SavGol_39(i)
