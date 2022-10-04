@@ -79,7 +79,8 @@ def Ref_Peaks(i):
     print ("Peaks time stamps in raw data: ", peaks_array_filtered[11])
     plt.plot(Ref_Acceleration_39[i], linewidth = '3', label = 'Filtered data')
     plt.axhline(y, linewidth = '3', color = 'r',label = 'Threshold')
-    #plt.suptitle(name + ' ' + Ref_Location + ' '+ str(i), fontsize='30')
+    title = os.path.split(Data_files[i])[-1] 
+    plt.suptitle(title, fontsize='30')
     plt.legend(fontsize = 30)
     plt.xlabel('Time Stamp, [cs]', fontsize=30)
     plt.ylabel('Acceleration, [m/s^2]', fontsize = 30)
@@ -111,7 +112,9 @@ def SavGol_39 (i):
 def PlotMatch(i):
     plt.plot(acceleration[i], label = 'Filtered data: ' + str(i+1))
     plt.plot(range(indx_array[i],indx_array[i] + len (gaitCyclePattern)), acceleration[i][indx_array[i]:indx_array[i]+len(gaitCyclePattern)], label = 'Motif', linewidth = 4)
-    plt.suptitle('Match in ' + name + "'s dataset number: " + str(i+1), fontsize='30')
+    title = os.path.split(Data_files[i])[-1] 
+    # plt.suptitle('Match in ' + name + "'s dataset number: " + str(i+1), fontsize='30')
+    plt.suptitle(title + "'s motifs",fontsize='30')
     plt.grid(True, 'both')
     plt.legend()
     plt.show()

@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from AndriiMSc_Number_of_Peaks import NR_OF_FILES
 from calculations import addCols
 from scipy.signal import find_peaks
 import stumpy
@@ -62,7 +61,7 @@ for Ref_file in Ref_files:
 #SHANK
 #gaitCyclePattern = Ref_Acceleration_39[0][556:921] #single dataset
 #FOOT
-gaitCyclePattern = Ref_Acceleration_39[0][680:820] #single dataset
+gaitCyclePattern = Ref_Acceleration_39[0][725:790] #single dataset
 
 #---------------------------------------------------------Matrix Profiling-------------------------------------------------------------#
 
@@ -76,7 +75,7 @@ def SavGol_39 (i):
 def PlotMatch(i):
     plt.plot(acceleration[i], label = 'Filtered data: ' + str(i))
     plt.plot(range(indx_array[i],indx_array[i] + len (gaitCyclePattern)), acceleration[i][indx_array[i]:indx_array[i]+len(gaitCyclePattern)], label = 'Motif', linewidth = 2)
-    plt.suptitle('Match in ' + name + "'s dataset number: " + str(i+1), fontsize='30')
+    #plt.suptitle('Match in ' + name + "'s dataset number: " + str(i+1), fontsize='30')
     plt.grid(True, 'both')
     plt.legend()
     plt.show()
@@ -136,4 +135,3 @@ for i in range (0,NR_OF_FILES):
     print('Number of Peaks in Profile Match: ', NumOfPeaks[i])
     i += 1
 
-PlotMatch(0)
