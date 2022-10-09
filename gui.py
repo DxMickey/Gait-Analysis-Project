@@ -2,13 +2,15 @@ from posixpath import split
 import tkinter as tk
 from tkinter import filedialog
 from turtle import position
+
+from pandas import DataFrame
 import AndriiMSc_Number_of_Peaks as peaks
 import os
 
-from database import database
+from database import connect, database
 
 # Table name that the user chose to save into database
-chosen_File_Name = "test"
+chosen_File_Name = "test4"
 
 root = tk.Tk()
 root.title("Gait Analysis")
@@ -29,8 +31,17 @@ def runCode():
 
     peaks.main(options.get(), filesList)
 
-def getChosenName():
+# Returns the name that the user chose for their table name in database
+def getName():
     return chosen_File_Name
+
+# Inserts raw and calculated data from sensor into database
+# Ideally this function would be in 'database.py', but because of an error it is here for now
+def toSQL(df: DataFrame):
+    fName = getName()
+    conn = connect("oldData.db")
+    df.to_sql(name=fName, con=conn, if_exists='replace', index=False)
+    conn.close()
 
 
 btn_run = tk.Button(

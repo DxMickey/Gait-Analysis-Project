@@ -7,6 +7,8 @@ from scipy.signal import find_peaks
 from scipy.signal import savgol_filter
 from matplotlib import pyplot as plt
 
+import gui
+
 def main(sensorLocation, files = []):
 
     plt.rcParams["figure.figsize"] = [30,15]
@@ -81,10 +83,7 @@ def main(sensorLocation, files = []):
         time[i] = df.time
         acceleration_29[i] = SavGol_39(i)
         i += 1
-        conn = connect("oldData.db")
-        tableName = "test"
-        df.to_sql(name=tableName, con=conn, if_exists='append', index=False)
-        conn.close()
+        gui.toSQL(df)
             
 
     #find the peaks in raw data (HSs)

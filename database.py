@@ -1,11 +1,14 @@
 from msilib.schema import Error
 import sqlite3
 
+from pandas import DataFrame
+
+
+
 
 def database(name):
     conn = connect("oldData.db")
     createTable(conn, name)
-    #insertData(conn, name)
 
 # Connect to database file
 def connect(dbFile):
@@ -23,12 +26,3 @@ def createTable(conn, name):
         conn.close()
     except Error as e:
         print(e)
-
-# Inserts raw data into created table
-def insertData(conn, name):
-    try:
-        cur = conn.cursor()
-        cur.execute("INSERT INTO {} VALUES (1,2,3,4,5,6,7,8,9,10,11,12,13)".format(name))
-        conn.commit()
-    except Error as e:
-        print(e)  
