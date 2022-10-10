@@ -83,7 +83,7 @@ def main(sensorLocation, files = []):
         time[i] = df.time
         acceleration_29[i] = SavGol_39(i)
         i += 1
-        gui.toSQL(df)
+        gui.confirmSave(df)
             
 
     #find the peaks in raw data (HSs)

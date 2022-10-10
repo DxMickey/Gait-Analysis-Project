@@ -1,10 +1,6 @@
 from msilib.schema import Error
 import sqlite3
 
-from pandas import DataFrame
-
-
-
 
 def database(name):
     conn = connect("oldData.db")
