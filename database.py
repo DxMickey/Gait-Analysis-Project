@@ -23,10 +23,22 @@ def createTable(conn, name):
     except Error as e:
         print(e)
 
-def additionalDataTable(tableName):
+def additionalDataTable(tableName, subject, senLoc, senCon):
     conn = connect("oldData.db")
     try:
         cur = conn.cursor()
-        cur.execute("CREATE TABLE IF NOT EXISTS \"{}_data\" (Subject STRING, \"Sensor location\" STRING, \"Sensor condition\" STRING)".format(tableName))
+        cur.execute("CREATE TABLE IF NOT EXISTS \"{}_data\" (Subject STRING, \"Sensor location\" STRING, \"Sensor condition\" STRING);".format(tableName))
+        conn.close()
+    except Error as e:
+        print(e)
+    insertIntoAddTable(tableName, subject, senLoc, senCon)
+
+def insertIntoAddTable(tableName, subject, senLoc, senCon):
+    conn = connect("oldData.db")
+    try:
+        cur = conn.cursor()
+        cur.execute("INSERT INTO \"{}_data\" VALUES (\"{}\", \"{}\", \"{}\");".format(tableName, subject, senLoc, senCon))
+        conn.commit()
+        conn.close()
     except Error as e:
         print(e)

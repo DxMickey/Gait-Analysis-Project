@@ -61,7 +61,7 @@ def additionalData(df: DataFrame):
     global dataBox
     dataBox = tk.Tk()
     dataBox.title("Additional data")
-    dataBox.geometry("400x200")
+    dataBox.geometry("400x275")
     dataBox.config(bg="lightgray")
 
     lblTableName = tk.Label(dataBox, text="Table name:")
@@ -79,12 +79,17 @@ def additionalData(df: DataFrame):
     lblSensorLoc2 = tk.Label(dataBox, text=options.get())
     lblSensorLoc2.grid(row=3,column=2)
 
+    lblSensorCon = tk.Label(dataBox, text="Sensor condition:")
+    lblSensorCon.grid(row=4, column=1)
+    txtSensorCon = tk.Text(dataBox, height=1, width=20)
+    txtSensorCon.grid(row=4, column=2)
+
     btn_yes = Button(dataBox, text="SAVE", command=lambda: 
     [
-        additionalDataTable(txtTableName.get("1.0", "end-1c")),
+        additionalDataTable(txtTableName.get("1.0", "end-1c"), txtSubjectName.get("1.0", "end-1c"), options.get(), txtSensorCon.get("1.0", "end-1c")),
         toSQL(df, txtTableName.get("1.0", "end-1c"))
     ])
-    btn_yes.grid(row=4,column=2)
+    btn_yes.grid(row=5,column=2, pady=25)
 
 btn_run = tk.Button(
     text="Analyse new data",
