@@ -1,17 +1,16 @@
 from posixpath import split
+from sqlite3 import DatabaseError
 import tkinter as tk
 from tkinter import filedialog, Button
 from turtle import position
 from numpy import pad
 
 from pandas import DataFrame
+from pyparsing import col
 import AndriiMSc_Number_of_Peaks as peaks
 import os
 
 from database import connect
-
-# Table name that the user chose to save into database
-chosen_File_Name = "test4"
 
 root = tk.Tk()
 root.title("Gait Analysis")
@@ -31,15 +30,11 @@ def runCode():
 
     peaks.main(options.get(), filesList)
 
-# Returns the name that the user chose for their table name in database
-def getName():
-    return chosen_File_Name
-
 # Inserts raw and calculated data from sensor into database
 # Ideally this function would be in 'database.py', but because of an error it is here for now
-def toSQL(df: DataFrame):
-    msg.destroy()
-    fName = getName()
+def toSQL(df: DataFrame, tableName):
+    dataBox.destroy()
+    fName = tableName
     conn = connect("oldData.db")
     df.to_sql(name=fName, con=conn, if_exists='replace', index=False)
     conn.close()
@@ -56,14 +51,24 @@ def confirmSave(df: DataFrame):
     label = tk.Label(msg, text="Save data to database?")
     label.config(bg="lightgray", font=("Arial", 16))
     label.grid(row=1,column=2, pady=25)
-    btn_yes = Button(msg, text="Yes", command=lambda: toSQL(df))
+    btn_yes = Button(msg, text="Yes", command=lambda: additionalData(df))
     btn_yes.grid(row=2,column=1, padx=25)
     btn_no = Button(msg, text="No", command=lambda: msg.destroy())
     btn_no.grid(row=2,column=3)
 
 def additionalData(df: DataFrame):
-
-    toSQL(df)
+    msg.destroy()
+    global dataBox
+    dataBox = tk.Tk()
+    dataBox.title("Additional data")
+    dataBox.geometry("400x200")
+    dataBox.config(bg="lightgray")
+    label = tk.Label(dataBox, text="Table name:")
+    label.grid(row=1,column=1,padx=25,pady=25)
+    tableNameText = tk.Text(dataBox, height=1, width=20)
+    tableNameText.grid(row=1,column=2)
+    btn_yes = Button(dataBox, text="SAVE", command=lambda: toSQL(df, tableNameText.get("1.0", "end-1c")))
+    btn_yes.grid(row=2,column=2)
 
 btn_run = tk.Button(
     text="Analyse new data",
