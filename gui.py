@@ -10,7 +10,7 @@ from pyparsing import col
 import AndriiMSc_Number_of_Peaks as peaks
 import os
 
-from database import connect
+from database import connect, additionalDataTable
 
 root = tk.Tk()
 root.title("Gait Analysis")
@@ -63,12 +63,28 @@ def additionalData(df: DataFrame):
     dataBox.title("Additional data")
     dataBox.geometry("400x200")
     dataBox.config(bg="lightgray")
-    label = tk.Label(dataBox, text="Table name:")
-    label.grid(row=1,column=1,padx=25,pady=25)
-    tableNameText = tk.Text(dataBox, height=1, width=20)
-    tableNameText.grid(row=1,column=2)
-    btn_yes = Button(dataBox, text="SAVE", command=lambda: toSQL(df, tableNameText.get("1.0", "end-1c")))
-    btn_yes.grid(row=2,column=2)
+
+    lblTableName = tk.Label(dataBox, text="Table name:")
+    lblTableName.grid(row=1,column=1,padx=25,pady=25)
+    txtTableName = tk.Text(dataBox, height=1, width=20)
+    txtTableName.grid(row=1,column=2)
+
+    lblSubjectName = tk.Label(dataBox, text="Subject name:")
+    lblSubjectName.grid(row=2,column=1)
+    txtSubjectName = tk.Text(dataBox, height=1, width=20)
+    txtSubjectName.grid(row=2,column=2)
+
+    lblSensorLoc = tk.Label(dataBox, text="Sensor location:")
+    lblSensorLoc.grid(row=3,column=1,pady=25)
+    lblSensorLoc2 = tk.Label(dataBox, text=options.get())
+    lblSensorLoc2.grid(row=3,column=2)
+
+    btn_yes = Button(dataBox, text="SAVE", command=lambda: 
+    [
+        additionalDataTable(txtTableName.get("1.0", "end-1c")),
+        toSQL(df, txtTableName.get("1.0", "end-1c"))
+    ])
+    btn_yes.grid(row=4,column=2)
 
 btn_run = tk.Button(
     text="Analyse new data",

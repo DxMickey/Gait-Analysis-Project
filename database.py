@@ -22,3 +22,11 @@ def createTable(conn, name):
         conn.close()
     except Error as e:
         print(e)
+
+def additionalDataTable(tableName):
+    conn = connect("oldData.db")
+    try:
+        cur = conn.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS \"{}_data\" (Subject STRING, \"Sensor location\" STRING, \"Sensor condition\" STRING)".format(tableName))
+    except Error as e:
+        print(e)
