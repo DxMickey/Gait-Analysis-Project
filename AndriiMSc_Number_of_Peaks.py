@@ -6,16 +6,17 @@ from calculations import *
 from scipy.signal import find_peaks
 from scipy.signal import savgol_filter
 from matplotlib import pyplot as plt
+from sqlalchemy import create_engine
 
-import gui
 
-def main(sensorLocation, files = []):
+
+def main(tableName):
 
     plt.rcParams["figure.figsize"] = [30,15]
     plt.rcParams['xtick.direction'] = 'out'
 
     #specify path to the directory with files (same folder as this script by default)
-    NR_OF_FILES_TO_ANALYZE = len(files)
+    NR_OF_FILES_TO_ANALYZE = 1
     i = 0
     acceleration = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     new_acceleration = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
@@ -30,16 +31,11 @@ def main(sensorLocation, files = []):
     acceleration_29 = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     new_acceleration_29 = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 
-    location = sensorLocation
+    location = "Ankle"
 
-    if location == "Ankle":
-        y = 14
-    elif location == "Shank":
-        y = 13
-    elif location == "Foot":
-        y = 16
+    
 
-    b = y
+    b = 13
 
     def Plot(i):
         plt.plot(acceleration[i], label = str(location) +' '+str(i))
@@ -58,32 +54,31 @@ def main(sensorLocation, files = []):
         return acceleration_29[i]
 
     #uploading the files    
-    for file in files:
+    
+    cnx = create_engine('sqlite:///oldData.db').connect()
+    df = pd.read_sql_table(tableName, cnx)
+    df.columns = ['stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz']
         
-        df = pd.read_csv(file)
-        df.columns = ['stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz']
-            
-        #Calculate magnitudes
-        magnitudes = []
-        for idx,x in enumerate( df['ax']):
-            y = df['ay'][idx]
-            z = df['az'][idx]
-            magnitudes.append(calculateMagnitude(x,y,z))
-        #Add averagea column with the calculated data
-        df.insert(len(df.columns),"averagea" ,magnitudes)
-            
-        #Calculate timestamps
-        beginTime = df['stamp'][0]
-        timestamps = []
-        for idx,stamp in enumerate(df['stamp']):
-            timestamps.append(timeStampToSeconds(stamp,beginTime))
-        #Insert the calculated times
-        df.insert(0,'time',timestamps)
-        acceleration[i] = df.averagea
-        time[i] = df.time
-        acceleration_29[i] = SavGol_39(i)
-        i += 1
-        gui.confirmSave(df)
+    #Calculate magnitudes
+    magnitudes = []
+    for idx,x in enumerate( df['ax']):
+        y = df['ay'][idx]
+        z = df['az'][idx]
+        magnitudes.append(calculateMagnitude(x,y,z))
+    #Add averagea column with the calculated data
+    df.insert(len(df.columns),"averagea" ,magnitudes)
+        
+    #Calculate timestamps
+    beginTime = df['stamp'][0]
+    timestamps = []
+    for idx,stamp in enumerate(df['stamp']):
+        timestamps.append(timeStampToSeconds(stamp,beginTime))
+    #Insert the calculated times
+    df.insert(0,'time',timestamps)
+    acceleration[i] = df.averagea
+    time[i] = df.time
+    acceleration_29[i] = SavGol_39(i)
+    i += 1
             
 
     #find the peaks in raw data (HSs)
@@ -122,12 +117,7 @@ def main(sensorLocation, files = []):
         print("Number of peaks in Raw data: " + str(len(peaks_array_lower[i])))
         print (peaks_array_filtered[i])
         print("Number of peaks in Filtered data: " + str(len(peaks_array_filtered[i])))
-        plt.plot(acceleration[i])
-        plt.plot(acceleration_29[i], linewidth = '2')
-        plt.axhline(y=b, linewidth = '3', color = 'r')
-        plt.suptitle('Acceleration ' + str(i), fontsize='30')
-        plt.grid(True, 'both')
-        plt.show()
+
 
     #identify region of interest
     def Cut(i,start,end):
@@ -155,6 +145,9 @@ def main(sensorLocation, files = []):
         print("Number of peaks in Filtered data: " + str(len(peaks)))
 
     Peaks(0)
+
+    return(acceleration, acceleration_29)
+
     
 # this won't be run when imported
 if __name__ == "__main__":
