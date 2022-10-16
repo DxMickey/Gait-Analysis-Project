@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import filedialog, Button
 from turtle import position
 from numpy import pad
+import time
 
 from pandas import DataFrame
 from pyparsing import col
@@ -29,6 +30,10 @@ class UI(tk.Tk):
 
 
         def insertData():
+            """ 
+            User chooses which file to save data from
+           
+            """
 
             tk.messagebox.showinfo("Gait analysis",  "Choose file to save")
             df = pd.read_csv(filedialog.askopenfilename())
@@ -37,9 +42,16 @@ class UI(tk.Tk):
 
             additionalData(df)
             
-            refreshList
+
 
         def getTables():
+            """
+            Method returns all table names from sqlite database, that dont have _data in their name
+
+            :return: list of table names
+
+            """
+
             tablesList = []
             tablesFiltered = []
             conn = connect("oldData.db")
@@ -64,6 +76,8 @@ class UI(tk.Tk):
             conn = connect("oldData.db")
             df.to_sql(name=fName, con=conn, if_exists='replace', index=False)
             conn.close()
+
+            refreshList()
 
 
 
@@ -104,6 +118,11 @@ class UI(tk.Tk):
 
 
         def findPeaks():
+            """
+            Method for plotting out the graph with analysed data from peaks.main function
+            
+            """
+
             axes.clear()
             list1, list2 = peaks.main(dataList.get())
             axes.plot(list1[0])
@@ -115,6 +134,11 @@ class UI(tk.Tk):
 
 
         def refreshList():
+            """
+            Method for updating the names of tables in dropdown menu by deleting all the items and writing new ones.
+
+            """
+
             
             dataList_drop['menu'].delete(0, 'end')
             for table in getTables():
@@ -122,6 +146,14 @@ class UI(tk.Tk):
                 dataList_drop['menu'].add_command(label=table, command=tk._setit(dataList, table))
 
         def getLocation():
+            """
+            Method for getting saved sensor location from database
+            
+            :return: Integer depending on the location, 14, 13 or 16
+            
+            """
+
+
             conn = connect("oldData.db")
             tableName = dataList.get() + "_data"
             res = conn.execute("SELECT \"Sensor location\" FROM \"{}\";".format(tableName))
@@ -134,16 +166,7 @@ class UI(tk.Tk):
             else:
                 return 16
 
-
-
-             
-
-
-
-
-            
-
-
+ 
         
         btn_insertData = tk.Button(
             text="Save new data",
