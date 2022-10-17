@@ -1,6 +1,8 @@
+from datetime import datetime
 from msilib.schema import Error
 import sqlite3
-
+import os
+import datetime
 
 def database(name):
     conn = connect("oldData.db")
@@ -23,21 +25,21 @@ def createTable(conn, name):
     except Error as e:
         print(e)
 
-def additionalDataTable(tableName, subject, senLoc, senCon):
+def additionalDataTable(tableName, subject, senLoc, senCon, date):
     conn = connect("oldData.db")
     try:
         cur = conn.cursor()
-        cur.execute("CREATE TABLE IF NOT EXISTS \"{}_data\" (Subject STRING, \"Sensor location\" STRING, \"Sensor condition\" STRING);".format(tableName))
+        cur.execute("CREATE TABLE IF NOT EXISTS \"{}_data\" (Subject STRING, \"Sensor location\" STRING, \"Sensor condition\" STRING, \"Data created\" DATE);".format(tableName))
         conn.close()
     except Error as e:
         print(e)
-    insertIntoAddTable(tableName, subject, senLoc, senCon)
+    insertIntoAddTable(tableName, subject, senLoc, senCon, date)
 
-def insertIntoAddTable(tableName, subject, senLoc, senCon):
+def insertIntoAddTable(tableName, subject, senLoc, senCon, date):
     conn = connect("oldData.db")
     try:
         cur = conn.cursor()
-        cur.execute("INSERT INTO \"{}_data\" VALUES (\"{}\", \"{}\", \"{}\");".format(tableName, subject, senLoc, senCon))
+        cur.execute("INSERT INTO \"{}_data\" VALUES (\"{}\", \"{}\", \"{}\", \"{}\");".format(tableName, subject, senLoc, senCon, date))
         conn.commit()
         conn.close()
     except Error as e:
