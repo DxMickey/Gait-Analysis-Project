@@ -213,7 +213,7 @@ class UI(tk.Tk):
                     dataList.append(data[0])
                     dataList.append(data[1])
                     dataList.append(data[2])
-                    dataList.append("data[3]")
+                    dataList.append(data[3])
             
         
             conn.close()
