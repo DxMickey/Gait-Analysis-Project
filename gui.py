@@ -1,7 +1,7 @@
 from posixpath import split
 from sqlite3 import DatabaseError
 import tkinter as tk
-from tkinter import filedialog, Button
+from tkinter import CENTER, W, filedialog, Button, ttk
 from turtle import position
 from numpy import pad
 import time
@@ -61,6 +61,30 @@ class UI(tk.Tk):
             conn.close()
             for table in tablesList:
                 if "_data" not in table:
+                    tablesFiltered.append(table)
+
+
+            return tablesFiltered
+
+       
+       
+        def getDataTables():
+            """
+            Method returns all table names from sqlite database, that have _data in their name
+
+            :return: list of table names
+
+            """
+
+            tablesList = []
+            tablesFiltered = []
+            conn = connect("oldData.db")
+            res = conn.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            for name in res.fetchall():
+                tablesList.append(name[0])
+            conn.close()
+            for table in tablesList:
+                if "_data" in table:
                     tablesFiltered.append(table)
 
 
@@ -158,6 +182,7 @@ class UI(tk.Tk):
             tableName = dataList.get() + "_data"
             res = conn.execute("SELECT \"Sensor location\" FROM \"{}\";".format(tableName))
             location = res.fetchone()
+            conn.close()
             print(location)
             if "Ankle" in location:
                 return 14
@@ -166,7 +191,51 @@ class UI(tk.Tk):
             else:
                 return 16
 
- 
+        def getData():
+            conn = connect("oldData.db")
+            dataList = []
+            tableList = getDataTables()
+            for table in tableList:
+                res = conn.execute("SELECT * FROM \"{}\";".format(table))
+                for data in res.fetchall():
+                    dataList.append(data[0])
+                    dataList.append(data[1])
+                    dataList.append(data[2])
+            
+        
+            conn.close()
+            return dataList
+
+
+        def openTree():
+            global dataBox
+            dataBox = tk.Tk()
+            dataBox.title("Additional data")
+            dataBox.geometry("800x600+800+400")
+            dataBox.config(bg="lightgray")
+            tree = ttk.Treeview(dataBox, columns=("tableName", "patientName", "situation", "date"))
+            
+            tree.heading('tableName', text="Save name", anchor=W)
+            tree.heading('patientName', text="Patient", anchor=W)
+            tree.heading('situation', text="Situation", anchor=W)
+            tree.heading('date', text="Date", anchor=W)
+
+            tree.column('#0', minwidth=0, width=0)
+            tree.column('#1', minwidth=25, width=200)
+            tree.column('#2', minwidth=25, width=200)
+            tree.column('#3', minwidth=25, width=200)
+            tree.column('#4', minwidth=25, width=200)
+
+            itemsList = getData()
+            
+            print(itemsList)
+            print(len(itemsList))
+            for i in range(0,len(itemsList),3):
+
+                tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2]))
+
+
+            tree.pack()
         
         btn_insertData = tk.Button(
             text="Save new data",
@@ -183,6 +252,17 @@ class UI(tk.Tk):
             command=findPeaks
 
         )
+
+        btn_tree = tk.Button(
+            text="Show saved data",
+            bg="blue",
+            fg="yellow",
+            command=openTree
+        )
+
+        
+
+
 
 
         # datatype of menu text
@@ -228,6 +308,8 @@ class UI(tk.Tk):
         frame.place(x=400,y=0)	
         btn_Peaks.place(x=140,y=300,width=120,height=40)
         dataList_drop.place(x=230,y=499,width=89,height=25)
+        btn_tree.place(x=140,y=430,width=120,height=40)
+        
 
 
 
