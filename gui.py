@@ -3,7 +3,7 @@ from msilib.schema import File
 from posixpath import split
 from sqlite3 import DatabaseError
 import tkinter as tk
-from tkinter import StringVar, filedialog, Button
+from tkinter import filedialog, Button
 from turtle import position
 from numpy import pad
 import time
@@ -121,7 +121,6 @@ class UI(tk.Tk):
 
             btn_yes = Button(dataBox, text="SAVE", command=lambda: 
             [   
-                #print(sensorLoc.get())
                 additionalDataTable(txtTableName.get("1.0", "end-1c"), txtSubjectName.get("1.0", "end-1c"), sensorLoc.get(), txtSensorCon.get("1.0", "end-1c"), dateAndTime(file)),
                 toSQL(df, txtTableName.get("1.0", "end-1c"))
             ])
@@ -196,19 +195,8 @@ class UI(tk.Tk):
         )
 
 
-        # datatype of menu text
-        #options = tk.StringVar(self)
-        #options.set("Ankle")
-
         dataList = tk.StringVar(self)
-
-        
         dataList_drop = tk.OptionMenu(self, dataList, *getTables())
-
-        # Create Dropdown menu
-        # location_drop = tk.OptionMenu(self, options, "Ankle", "Shank", "Foot")
-
-   
 
 
         frame = tk.Frame(self)
