@@ -118,7 +118,7 @@ class UI(tk.Tk):
             dataBox.geometry("300x375+800+400")
             dataBox.config(bg="lightgray")
 
-            lblTableName = tk.Label(dataBox, text="Table name:")
+            lblTableName = tk.Label(dataBox, text="Save name:")
             lblTableName.grid(row=1,column=1,padx=25,pady=25)
             txtTableName = tk.Text(dataBox, height=1, width=20)
             txtTableName.grid(row=1,column=2)
@@ -209,9 +209,11 @@ class UI(tk.Tk):
             for table in tableList:
                 res = conn.execute("SELECT * FROM \"{}\";".format(table))
                 for data in res.fetchall():
+                    dataList.append(table.replace('_data', ''))
                     dataList.append(data[0])
                     dataList.append(data[1])
                     dataList.append(data[2])
+                    dataList.append("data[3]")
             
         
             conn.close()
@@ -219,15 +221,16 @@ class UI(tk.Tk):
 
 
         def openTree():
-            global dataBox
-            dataBox = tk.Tk()
-            dataBox.title("Additional data")
-            dataBox.geometry("800x600+800+400")
-            dataBox.config(bg="lightgray")
-            tree = ttk.Treeview(dataBox, columns=("tableName", "patientName", "situation", "date"))
+            global treeBox
+            treeBox = tk.Tk()
+            treeBox.title("Additional data")
+            treeBox.geometry("1200x600+550+300")
+            treeBox.config(bg="lightgray")
+            tree = ttk.Treeview(treeBox, columns=("tableName", "patientName", "sensor_location", "situation", "date"))
             
-            tree.heading('tableName', text="Save name", anchor=W)
+            tree.heading('tableName', text="Saved name", anchor=W)
             tree.heading('patientName', text="Patient", anchor=W)
+            tree.heading('sensor_location', text="Sensor location", anchor=W)
             tree.heading('situation', text="Situation", anchor=W)
             tree.heading('date', text="Date", anchor=W)
 
@@ -236,17 +239,23 @@ class UI(tk.Tk):
             tree.column('#2', minwidth=25, width=200)
             tree.column('#3', minwidth=25, width=200)
             tree.column('#4', minwidth=25, width=200)
+            tree.column('#5', minwidth=25, width=200)
+
+            #Scrollbar
+            scrollbar = ttk.Scrollbar(treeBox, orient=tk.VERTICAL, command=tree.yview)
+            tree.configure(yscroll=scrollbar.set)
+            scrollbar.grid(row=0, column=1, sticky='ns')
 
             itemsList = getData()
             
             print(itemsList)
             print(len(itemsList))
-            for i in range(0,len(itemsList),3):
+            for i in range(0,len(itemsList),5):
 
-                tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2]))
+                tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4]))
 
 
-            tree.pack()
+            tree.grid(row=0, column=0, sticky=tk.NSEW)
         
         btn_insertData = tk.Button(
             text="Save new data",
