@@ -1,7 +1,9 @@
+from datetime import datetime
+from msilib.schema import File
 from posixpath import split
 from sqlite3 import DatabaseError
 import tkinter as tk
-from tkinter import filedialog, Button
+from tkinter import StringVar, filedialog, Button
 from turtle import position
 from numpy import pad
 import time
@@ -36,13 +38,12 @@ class UI(tk.Tk):
             """
 
             tk.messagebox.showinfo("Gait analysis",  "Choose file to save")
-            df = pd.read_csv(filedialog.askopenfilename())
+            file = filedialog.askopenfilename()
+            df = pd.read_csv(file)
             df.columns = ['stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz']
             
-
-            additionalData(df)
+            additionalData(df, file)
             
-
 
         def getTables():
             """
@@ -66,7 +67,10 @@ class UI(tk.Tk):
 
             return tablesFiltered
 
-
+        def dateAndTime(file):
+            date = os.path.getctime(file)
+            date2 = datetime.fromtimestamp(date)
+            return date2
         
         # Inserts raw and calculated data from sensor into database
         # Ideally this function would be in 'database.py', but because of an error it is here for now
@@ -82,11 +86,11 @@ class UI(tk.Tk):
 
 
 
-        def additionalData(df: DataFrame):
+        def additionalData(df: DataFrame, file: File):
             global dataBox
             dataBox = tk.Tk()
             dataBox.title("Additional data")
-            dataBox.geometry("400x275+800+400")
+            dataBox.geometry("300x375+800+400")
             dataBox.config(bg="lightgray")
 
             lblTableName = tk.Label(dataBox, text="Table name:")
@@ -101,20 +105,27 @@ class UI(tk.Tk):
 
             lblSensorLoc = tk.Label(dataBox, text="Sensor location:")
             lblSensorLoc.grid(row=3,column=1,pady=25)
-            lblSensorLoc2 = tk.Label(dataBox, text=options.get())
-            lblSensorLoc2.grid(row=3,column=2)
+
+            sensorLoc = tk.StringVar(dataBox, "lamp")
+            rdSL1 = tk.Radiobutton(dataBox, text="Ankle", variable=sensorLoc, value="Ankle", tristatevalue="x")
+            rdSL1.grid(row=3,column=2)
+            rdSL2 = tk.Radiobutton(dataBox, text="Foot", variable=sensorLoc, value="Foot", tristatevalue="x")
+            rdSL2.grid(row=4,column=2)
+            rdSL3 = tk.Radiobutton(dataBox, text="Shank", variable=sensorLoc, value="Shank", tristatevalue="x")
+            rdSL3.grid(row=5,column=2, pady=25)
 
             lblSensorCon = tk.Label(dataBox, text="Sensor condition:")
-            lblSensorCon.grid(row=4, column=1)
+            lblSensorCon.grid(row=6, column=1)
             txtSensorCon = tk.Text(dataBox, height=1, width=20)
-            txtSensorCon.grid(row=4, column=2)
+            txtSensorCon.grid(row=6, column=2)
 
             btn_yes = Button(dataBox, text="SAVE", command=lambda: 
-            [
-                additionalDataTable(txtTableName.get("1.0", "end-1c"), txtSubjectName.get("1.0", "end-1c"), options.get(), txtSensorCon.get("1.0", "end-1c")),
+            [   
+                #print(sensorLoc.get())
+                additionalDataTable(txtTableName.get("1.0", "end-1c"), txtSubjectName.get("1.0", "end-1c"), sensorLoc.get(), txtSensorCon.get("1.0", "end-1c"), dateAndTime(file)),
                 toSQL(df, txtTableName.get("1.0", "end-1c"))
             ])
-            btn_yes.grid(row=5,column=2, pady=25)
+            btn_yes.grid(row=7,column=2, pady=25)
 
 
         def findPeaks():
@@ -142,7 +153,7 @@ class UI(tk.Tk):
             
             dataList_drop['menu'].delete(0, 'end')
             for table in getTables():
-                print(table)
+                #print(table)
                 dataList_drop['menu'].add_command(label=table, command=tk._setit(dataList, table))
 
         def getLocation():
@@ -186,8 +197,8 @@ class UI(tk.Tk):
 
 
         # datatype of menu text
-        options = tk.StringVar(self)
-        options.set("Ankle")
+        #options = tk.StringVar(self)
+        #options.set("Ankle")
 
         dataList = tk.StringVar(self)
 
@@ -195,11 +206,7 @@ class UI(tk.Tk):
         dataList_drop = tk.OptionMenu(self, dataList, *getTables())
 
         # Create Dropdown menu
-        location_drop = tk.OptionMenu(self, options, "Ankle", "Shank", "Foot")
-
-        location_label = tk.Label(
-            text="Sensor location:"
-        )
+        # location_drop = tk.OptionMenu(self, options, "Ankle", "Shank", "Foot")
 
    
 
@@ -223,9 +230,7 @@ class UI(tk.Tk):
 
         # Placing the elements
         btn_insertData.place(x=140,y=90,width=120,height=40)
-        location_label.place(x=140,y=180,width=89,height=25)
-        location_drop.place(x=230,y=180,width=89,height=25)
-        frame.place(x=400,y=0)	
+        frame.place(x=400,y=0)
         btn_Peaks.place(x=140,y=300,width=120,height=40)
         dataList_drop.place(x=230,y=499,width=89,height=25)
 
