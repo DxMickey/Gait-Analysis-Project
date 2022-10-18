@@ -27,8 +27,11 @@ class UI(tk.Tk):
         super().__init__()
 
         self.title("Gait Analysis")
-        self.geometry("1600x800")
-        self.config(bg="lightgray")
+        self.geometry("1800x950")
+        self.config(bg="white")
+
+        #Set the resizable property False
+        self.resizable(False, False)
 
 
         def insertData():
@@ -106,7 +109,15 @@ class UI(tk.Tk):
             df.to_sql(name=fName, con=conn, if_exists='replace', index=False)
             conn.close()
 
-            refreshList()
+            refreshTree()
+
+        def refreshTree():
+            tree.delete(*tree.get_children())
+            itemsList = getData()
+            
+            for i in range(0,len(itemsList),5):
+                tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4]))
+            
 
 
 
@@ -159,26 +170,16 @@ class UI(tk.Tk):
             """
 
             axes.clear()
-            list1, list2 = peaks.main(dataList.get())
+            list1, list2 = peaks.main(lbl_selected['text'])
             axes.plot(list1[0])
             axes.plot(list2[0], linewidth = '2')
             axes.axhline(getLocation(), linewidth = '3', color = 'r')
-            figure.suptitle('Acceleration ' + str(0), fontsize='30')
+            #figure.suptitle('Acceleration ' + str(0), fontsize='30')
             axes.grid(True, 'both')
             figure_canvas.draw()
 
 
-        def refreshList():
-            """
-            Method for updating the names of tables in dropdown menu by deleting all the items and writing new ones.
 
-            """
-
-            
-            dataList_drop['menu'].delete(0, 'end')
-            for table in getTables():
-                #print(table)
-                dataList_drop['menu'].add_command(label=table, command=tk._setit(dataList, table))
 
         def getLocation():
             """
@@ -190,7 +191,7 @@ class UI(tk.Tk):
 
 
             conn = connect("oldData.db")
-            tableName = dataList.get() + "_data"
+            tableName = lbl_selected['text'] + "_data"
             res = conn.execute("SELECT \"Sensor location\" FROM \"{}\";".format(tableName))
             location = res.fetchone()
             conn.close()
@@ -219,43 +220,14 @@ class UI(tk.Tk):
             conn.close()
             return dataList
 
-
-        def openTree():
-            global treeBox
-            treeBox = tk.Tk()
-            treeBox.title("Additional data")
-            treeBox.geometry("1200x600+550+300")
-            treeBox.config(bg="lightgray")
-            tree = ttk.Treeview(treeBox, columns=("tableName", "patientName", "sensor_location", "situation", "date"))
+        def selectedSave(a):
+            saveID = tree.focus()
+            saveDict = tree.item(saveID)
+            saveText = saveDict['values'][0]
             
-            tree.heading('tableName', text="Saved name", anchor=W)
-            tree.heading('patientName', text="Patient", anchor=W)
-            tree.heading('sensor_location', text="Sensor location", anchor=W)
-            tree.heading('situation', text="Situation", anchor=W)
-            tree.heading('date', text="Date", anchor=W)
+            lbl_selected.config(text = saveText)
 
-            tree.column('#0', minwidth=0, width=0)
-            tree.column('#1', minwidth=25, width=200)
-            tree.column('#2', minwidth=25, width=200)
-            tree.column('#3', minwidth=25, width=200)
-            tree.column('#4', minwidth=25, width=200)
-            tree.column('#5', minwidth=25, width=200)
-
-            #Scrollbar
-            scrollbar = ttk.Scrollbar(treeBox, orient=tk.VERTICAL, command=tree.yview)
-            tree.configure(yscroll=scrollbar.set)
-            scrollbar.grid(row=0, column=1, sticky='ns')
-
-            itemsList = getData()
-            
-            print(itemsList)
-            print(len(itemsList))
-            for i in range(0,len(itemsList),5):
-
-                tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4]))
-
-
-            tree.grid(row=0, column=0, sticky=tk.NSEW)
+  
         
         btn_insertData = tk.Button(
             text="Save new data",
@@ -273,26 +245,26 @@ class UI(tk.Tk):
 
         )
 
-        btn_tree = tk.Button(
-            text="Show saved data",
-            bg="blue",
-            fg="yellow",
-            command=openTree
+        lbl_selection = tk.Label(
+            text= "Selected saved file is:",
+            bg="white",
+            font=("Arial", 13)
         )
 
-        
+        lbl_selected = tk.Label(
+            text= "None",
+            bg="white",
+            font=("Arial", 13),
+            anchor=W,
+            wraplength=150
+        )
 
-
-
-
-        dataList = tk.StringVar(self)
-        dataList_drop = tk.OptionMenu(self, dataList, *getTables())
 
 
         frame = tk.Frame(self)
 
         # create a figure
-        figure = plt.Figure(figsize=(12, 8), dpi=100)
+        figure = plt.Figure(figsize=(14, 10), dpi=100)
 
 
         # create axes
@@ -305,13 +277,49 @@ class UI(tk.Tk):
         figure_canvas.draw()
         figure_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
+        #tree
+        tree = ttk.Treeview(self, columns=("tableName", "patientName", "sensor_location", "situation", "date"))
+        
+        tree.heading('tableName', text="Saved name", anchor=W)
+        tree.heading('patientName', text="Patient", anchor=W)
+        tree.heading('sensor_location', text="Sensor location", anchor=W)
+        tree.heading('situation', text="Situation", anchor=W)
+        tree.heading('date', text="Date", anchor=W)
+
+        tree.column('#0', minwidth=0, width=0)
+        tree.column('#1', minwidth=85, width=85)
+        tree.column('#2', minwidth=130, width=130)
+        tree.column('#3', minwidth=75, width=75)
+        tree.column('#4', minwidth=80, width=80)
+        tree.column('#5', minwidth=130, width=130)
+
+        #tree.bind('<Motion>', 'break')
+        tree.bind('<ButtonRelease-1>', selectedSave)
+
+        #Scrollbar
+        scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL, command=tree.yview)
+        tree.configure(yscroll=scrollbar.set)
+        
+
+        itemsList = getData()
+        
+        for i in range(0,len(itemsList),5):
+
+            tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4]))
+
+
+        
+
+
 
         # Placing the elements
-        btn_insertData.place(x=140,y=90,width=120,height=40)
-        frame.place(x=400,y=0)
-        btn_Peaks.place(x=140,y=300,width=120,height=40)
-        dataList_drop.place(x=230,y=499,width=89,height=25)
-        btn_tree.place(x=140,y=430,width=120,height=40)
+        btn_insertData.place(x=230,y=220,width=120,height=40)
+        frame.place(x=450,y=0)
+        btn_Peaks.place(x=230,y=400,width=120,height=40)
+        scrollbar.place(x=532,y=650, height=227)
+        tree.place(x=30,y=650)
+        lbl_selection.place(x=130,y=450, width=300)
+        lbl_selected.place(x=358,y=450)
         
 
 
