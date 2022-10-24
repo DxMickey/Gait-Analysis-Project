@@ -19,8 +19,14 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import compareGaitCycles as compGaits
 
 from database import connect, additionalDataTable
+from dataHandler import getFilteredData, readFileIntoDF, getPeaks
+from baselineFinder import getBaseline
+from calculations import addCols
+from matplotlib.backend_bases import key_press_handler
+
 
 class UI(tk.Tk):
     def __init__(self):
@@ -162,25 +168,6 @@ class UI(tk.Tk):
             ])
             btn_yes.grid(row=7,column=2, pady=25)
 
-
-        def findPeaks():
-            """
-            Method for plotting out the graph with analysed data from peaks.main function
-            
-            """
-
-            axes.clear()
-            list1, list2 = peaks.main(lbl_selected['text'])
-            axes.plot(list1[0])
-            axes.plot(list2[0], linewidth = '2')
-            axes.axhline(getLocation(), linewidth = '3', color = 'r')
-            #figure.suptitle('Acceleration ' + str(0), fontsize='30')
-            axes.grid(True, 'both')
-            figure_canvas.draw()
-
-
-
-
         def getLocation():
             """
             Method for getting saved sensor location from database
@@ -227,6 +214,81 @@ class UI(tk.Tk):
             
             lbl_selected.config(text = saveText)
 
+        def findPeaks():
+            """
+            Method for plotting out the graph with analysed data from peaks.main function
+            
+            """
+
+            axes.clear()
+            list1, list2 = peaks.main(lbl_selected['text'])
+            axes.plot(list1[0])
+            axes.plot(list2[0], linewidth = '2')
+            axes.axhline(getLocation(), linewidth = '3', color = 'r')
+            #figure.suptitle('Acceleration ' + str(0), fontsize='30')
+            axes.grid(True, 'both')
+            #axes.set_xlabel("time [cs]")
+            #axes.set_ylabel("Acceleration [ms^2]")
+            figure_canvas.draw()
+
+        def compareData():
+            global dots
+            axes.clear()
+            df = readFileIntoDF(lbl_selected['text'])
+            #axes.set_title(lbl_selected['text'])
+
+            unfiltered_acc = df.averagea
+            filtered_acc = getFilteredData(df.averagea)
+
+             # This adds the time parameter
+            df.insert(len(df.columns), "filtered_acc", filtered_acc)
+            filtered_acc = df.filtered_acc
+
+             # Get peaks in filtered data
+            peaks = getPeaks(filtered_acc,getLocation())
+            filtered_acc = df.filtered_acc
+            a = filtered_acc[peaks]
+
+            line, = axes.plot(filtered_acc)
+            dots, = axes.plot(filtered_acc[peaks].to_frame(),
+                    ".", markersize=20, picker=True)
+
+            axes.grid(True, 'both')
+            axes.set_xlabel("time [cs]")
+            axes.set_ylabel("Acceleration [ms^2]")
+
+            figure_canvas.draw()
+
+        
+        def compareGait():
+            global peaks, line, ax, filtered_acc
+            peaks = peaks[peaks != 0]  # filter all the 0s aka stuff user just removed
+            axes.clear()
+
+            for i in range(0, len(peaks), 2):
+                if(i + 2 > len(peaks)-1):
+                    break
+                start = peaks[i]
+                end = peaks[i+2]
+                gaitCycle = filtered_acc[start:end]
+                # sets the index starting from 0
+                axes.plot(gaitCycle.reset_index(drop=True))
+            figure_canvas.draw()
+
+        def handlePick(event):
+            global peaks
+            global filtered_acc
+            ind = event.ind
+            # event index might be an array if 2 peaks are overlapping
+            for i in ind:
+                peaks[i] = 0
+
+            dots.set_xdata(peaks)
+            figure_canvas.draw()
+
+
+
+
   
         
         btn_insertData = tk.Button(
@@ -236,6 +298,8 @@ class UI(tk.Tk):
             command=insertData
 
         )
+
+
 
         btn_Peaks = tk.Button(
             text="Find peaks",
@@ -259,6 +323,23 @@ class UI(tk.Tk):
             wraplength=150
         )
 
+        
+        btn_compareData = tk.Button(
+            text="CompareData",
+            bg="blue",
+            fg="yellow",
+            command=compareData
+
+        )
+
+        btn_compareGait = tk.Button(
+            text="CompareGait",
+            bg="blue",
+            fg="yellow",
+            command=compareGait
+
+        )
+
 
 
         frame = tk.Frame(self)
@@ -276,6 +357,9 @@ class UI(tk.Tk):
 
         figure_canvas.draw()
         figure_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        figure_canvas.mpl_connect("pick_event", handlePick)
+        figure_canvas.mpl_connect("key_press_event", key_press_handler)
 
         #tree
         tree = ttk.Treeview(self, columns=("tableName", "patientName", "sensor_location", "situation", "date"))
@@ -307,11 +391,6 @@ class UI(tk.Tk):
 
             tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4]))
 
-
-        
-
-
-
         # Placing the elements
         btn_insertData.place(x=230,y=220,width=120,height=40)
         frame.place(x=450,y=0)
@@ -320,7 +399,8 @@ class UI(tk.Tk):
         tree.place(x=30,y=650)
         lbl_selection.place(x=130,y=450, width=300)
         lbl_selected.place(x=358,y=450)
-        
+        btn_compareData.place(x=230,y=500,width=120,height=40)
+        btn_compareGait.place(x=230,y=550,width=120,height=40)
 
 
 
