@@ -23,8 +23,8 @@ def readFileIntoDF(tableName):
 
 # Input: dataframe column
 # Output: filtered data as 1d array
-def getFilteredData(array):
-    return savgol_filter(array, 39, 3)
+def getFilteredData(array, filterValue):
+    return savgol_filter(array, filterValue, 3)
 
 
 # Input: dataframe column

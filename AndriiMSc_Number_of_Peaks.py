@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 
 
 
-def main(tableName):
+def main(tableName, filterValue):
 
     plt.rcParams["figure.figsize"] = [30,15]
     plt.rcParams['xtick.direction'] = 'out'
@@ -47,7 +47,7 @@ def main(tableName):
 
     def SavGol_39 (i):
         #applying the Sav_Gol filter
-        ACC_filtered = savgol_filter(df.averagea, 39, 3)
+        ACC_filtered = savgol_filter(df.averagea, filterValue, 3)
         #the filtered signal is stored into an array
         acceleration_29[i] = ACC_filtered
         #time[i] = df.time

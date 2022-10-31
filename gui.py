@@ -7,6 +7,7 @@ from tkinter import CENTER, W, filedialog, Button, ttk
 from turtle import position
 from numpy import pad
 import time
+import math
 
 from pandas import DataFrame
 from pyparsing import col
@@ -37,6 +38,9 @@ class UI(tk.Tk):
 
         #Set the resizable property False
         self.resizable(False, False)
+
+        global lastButton
+
         
 
 
@@ -219,9 +223,10 @@ class UI(tk.Tk):
             Method for plotting out the graph with analysed data from peaks.main function
             
             """
+            global lastButton
 
             axes.clear()
-            list1, list2 = peaks.main(lbl_selected['text'])
+            list1, list2 = peaks.main(lbl_selected['text'], int(lbl_filter_value['text']))
             axes.plot(list1[0])
             axes.plot(list2[0], linewidth = '2')
             axes.axhline(getLocation(), linewidth = '3', color = 'r')
@@ -230,15 +235,16 @@ class UI(tk.Tk):
             #axes.set_xlabel("time [cs]")
             #axes.set_ylabel("Acceleration [ms^2]")
             figure_canvas.draw()
+            lastButton = "findPeaks"
 
         def compareData():
-            global dots, filtered_acc, line, peaks
+            global dots, filtered_acc, line, peaks, lastButton
             axes.clear()
             df = readFileIntoDF(lbl_selected['text'])
             #axes.set_title(lbl_selected['text'])
 
             unfiltered_acc = df.averagea
-            filtered_acc = getFilteredData(df.averagea)
+            filtered_acc = getFilteredData(df.averagea, int(lbl_filter_value['text']))
 
              # This adds the time parameter
             df.insert(len(df.columns), "filtered_acc", filtered_acc)
@@ -258,12 +264,13 @@ class UI(tk.Tk):
             axes.set_ylabel("Acceleration [ms^2]")
 
             figure_canvas.draw()
+            lastButton = "compareData"
 
         
         def compareGaits():
             
             axes.clear()
-            global peaks, line, ax, filtered_acc
+            global peaks, line, filtered_acc, lastButton
             peaks = peaks[peaks != 0]  # filter all the 0s aka stuff user just removed
 
             for i in range(0, len(peaks), 2):
@@ -279,6 +286,7 @@ class UI(tk.Tk):
             axes.set_xlabel("time [cs]")
             axes.set_ylabel("Acceleration [ms^2]")
             figure_canvas.draw()
+            lastButton = "compareGaits"
 
         def handlePick(event):
             global peaks
@@ -290,6 +298,20 @@ class UI(tk.Tk):
 
             dots.set_xdata(peaks)
             figure_canvas.draw()
+
+        def slider_changed(val):
+            global lastButton
+            print (math.floor(slider_filter.get()))
+            lbl_filter_value.config(text = (math.floor(slider_filter.get())))
+            
+            match lastButton:
+                case 'findPeaks':
+                    findPeaks()
+                case 'compareData':
+                    compareData()
+                case 'compareGaits':
+                    compareData()
+                    compareGaits()
 
 
 
@@ -343,6 +365,30 @@ class UI(tk.Tk):
             fg="yellow",
             command=compareGaits
 
+        )
+
+        current_value = tk.IntVar()
+
+        slider_filter = ttk.Scale(
+            from_=0,
+            to=100,
+            orient='horizontal',
+            command=slider_changed,
+            variable=current_value
+        )
+
+        slider_filter.set(39)
+        
+        lbl_filter = tk.Label(
+            text= "Filter value",
+            bg="white",
+            font=("Arial", 13)
+        )
+
+        lbl_filter_value = tk.Label(
+            text= "39",
+            bg="white",
+            font=("Arial", 15)
         )
 
 
@@ -406,6 +452,9 @@ class UI(tk.Tk):
         lbl_selected.place(x=358,y=350)
         btn_compareData.place(x=230,y=450,width=120,height=40)
         btn_compareGait.place(x=230,y=500,width=120,height=40)
+        slider_filter.place(x=190,y=585,width=200,height=25)
+        lbl_filter.place(x=250,y=555)
+        lbl_filter_value.place(x=390,y=583)
 
 
 
