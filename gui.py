@@ -19,7 +19,6 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import compareGaitCycles as compGaits
 
 from database import connect, additionalDataTable
 from dataHandler import getFilteredData, readFileIntoDF, getPeaks
@@ -38,6 +37,7 @@ class UI(tk.Tk):
 
         #Set the resizable property False
         self.resizable(False, False)
+        
 
 
         def insertData():
@@ -232,7 +232,7 @@ class UI(tk.Tk):
             figure_canvas.draw()
 
         def compareData():
-            global dots
+            global dots, filtered_acc, line, peaks
             axes.clear()
             df = readFileIntoDF(lbl_selected['text'])
             #axes.set_title(lbl_selected['text'])
@@ -260,10 +260,11 @@ class UI(tk.Tk):
             figure_canvas.draw()
 
         
-        def compareGait():
+        def compareGaits():
+            
+            axes.clear()
             global peaks, line, ax, filtered_acc
             peaks = peaks[peaks != 0]  # filter all the 0s aka stuff user just removed
-            axes.clear()
 
             for i in range(0, len(peaks), 2):
                 if(i + 2 > len(peaks)-1):
@@ -273,6 +274,10 @@ class UI(tk.Tk):
                 gaitCycle = filtered_acc[start:end]
                 # sets the index starting from 0
                 axes.plot(gaitCycle.reset_index(drop=True))
+
+            axes.grid(True, 'both')
+            axes.set_xlabel("time [cs]")
+            axes.set_ylabel("Acceleration [ms^2]")
             figure_canvas.draw()
 
         def handlePick(event):
@@ -336,7 +341,7 @@ class UI(tk.Tk):
             text="CompareGait",
             bg="blue",
             fg="yellow",
-            command=compareGait
+            command=compareGaits
 
         )
 
@@ -397,10 +402,10 @@ class UI(tk.Tk):
         btn_Peaks.place(x=230,y=400,width=120,height=40)
         scrollbar.place(x=532,y=650, height=227)
         tree.place(x=30,y=650)
-        lbl_selection.place(x=130,y=450, width=300)
-        lbl_selected.place(x=358,y=450)
-        btn_compareData.place(x=230,y=500,width=120,height=40)
-        btn_compareGait.place(x=230,y=550,width=120,height=40)
+        lbl_selection.place(x=130,y=350, width=300)
+        lbl_selected.place(x=358,y=350)
+        btn_compareData.place(x=230,y=450,width=120,height=40)
+        btn_compareGait.place(x=230,y=500,width=120,height=40)
 
 
 
