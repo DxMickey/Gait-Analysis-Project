@@ -22,7 +22,7 @@ matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from database import connect, additionalDataTable
-from dataHandler import getFilteredData, readFileIntoDF, getPeaks
+from dataHandler import getFilteredData, readFileIntoDF, getPeaks,getGaitCycles
 from baselineFinder import getBaseline
 from calculations import addCols
 from matplotlib.backend_bases import key_press_handler
@@ -35,12 +35,11 @@ class UI(tk.Tk):
         self.title("Gait Analysis")
         self.geometry("1800x950")
         self.config(bg="white")
-
+        self.df = None #the dataframe currently loaded into the window
         #Set the resizable property False
         self.resizable(False, False)
 
         global lastButton
-
         
 
 
@@ -56,6 +55,7 @@ class UI(tk.Tk):
             df.columns = ['stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz']
             
             additionalData(df, file)
+            self.df = df
             
 
         def getTables():
@@ -127,11 +127,6 @@ class UI(tk.Tk):
             
             for i in range(0,len(itemsList),5):
                 tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4]))
-            
-
-
-
-
         def additionalData(df: DataFrame, file: File):
             global dataBox
             dataBox = tk.Tk()
@@ -242,9 +237,9 @@ class UI(tk.Tk):
             axes.clear()
             df = readFileIntoDF(lbl_selected['text'])
             #axes.set_title(lbl_selected['text'])
-
+            self.df = df
             unfiltered_acc = df.averagea
-            filtered_acc = getFilteredData(df.averagea, int(lbl_filter_value['text']))
+            filtered_acc = getFilteredData(df, int(lbl_filter_value['text']))
 
              # This adds the time parameter
             df.insert(len(df.columns), "filtered_acc", filtered_acc)
@@ -265,22 +260,16 @@ class UI(tk.Tk):
 
             figure_canvas.draw()
             lastButton = "compareData"
-
         
         def compareGaits():
             
             axes.clear()
             global peaks, line, filtered_acc, lastButton
             peaks = peaks[peaks != 0]  # filter all the 0s aka stuff user just removed
-
-            for i in range(0, len(peaks), 2):
-                if(i + 2 > len(peaks)-1):
-                    break
-                start = peaks[i]
-                end = peaks[i+2]
-                gaitCycle = filtered_acc[start:end]
-                # sets the index starting from 0
-                axes.plot(gaitCycle.reset_index(drop=True))
+            gaitCycles = getGaitCycles(peaks, self.df)
+            
+            for cycle in gaitCycles:
+                axes.plot(cycle.time,cycle.filtered_acc)
 
             axes.grid(True, 'both')
             axes.set_xlabel("time [cs]")
