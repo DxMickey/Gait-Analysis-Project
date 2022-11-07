@@ -8,6 +8,8 @@ from turtle import position
 from numpy import pad
 import time
 import math
+import win32file
+from USB import getUSBDrive
 
 from pandas import DataFrame
 from pyparsing import col
@@ -202,6 +204,7 @@ class UI(tk.Tk):
                     dataList.append(data[1])
                     dataList.append(data[2])
                     dataList.append(data[3])
+                    dataList.append(data[4])
             
         
             conn.close()
@@ -338,6 +341,14 @@ class UI(tk.Tk):
                     compareData()
                     compareGaits()
 
+        def getSensorId():
+            tester = getUSBDrive(sensorIdFileName)
+            if (tester != None):
+                sensorId = tester
+            else:
+                sensorId = "Unknown"
+            return sensorId
+
 
 
 
@@ -438,9 +449,10 @@ class UI(tk.Tk):
         figure_canvas.mpl_connect("key_press_event", key_press_handler)
 
         #tree
-        tree = ttk.Treeview(self, columns=("tableName", "patientName", "sensor_location", "situation", "date"))
+        tree = ttk.Treeview(self, columns=("tableName", "sensorId", "patientName", "sensor_location", "situation", "date"))
         
         tree.heading('tableName', text="Saved name", anchor=W)
+        tree.heading('sensorId', text="Sensor ID", anchor=W)
         tree.heading('patientName', text="Patient", anchor=W)
         tree.heading('sensor_location', text="Sensor location", anchor=W)
         tree.heading('situation', text="Situation", anchor=W)
@@ -448,10 +460,11 @@ class UI(tk.Tk):
 
         tree.column('#0', minwidth=0, width=0)
         tree.column('#1', minwidth=85, width=85)
-        tree.column('#2', minwidth=130, width=130)
-        tree.column('#3', minwidth=75, width=75)
-        tree.column('#4', minwidth=80, width=80)
-        tree.column('#5', minwidth=130, width=130)
+        tree.column('#2', minwidth=60, width=60)
+        tree.column('#3', minwidth=130, width=130)
+        tree.column('#4', minwidth=75, width=75)
+        tree.column('#5', minwidth=80, width=80)
+        tree.column('#6', minwidth=130, width=130)
 
         #tree.bind('<Motion>', 'break')
         tree.bind('<ButtonRelease-1>', selectedSave)
@@ -463,16 +476,17 @@ class UI(tk.Tk):
 
         itemsList = getData()
         
-        for i in range(0,len(itemsList),5):
+        print(len(itemsList))
+        for i in range(0,len(itemsList),6):
 
-            tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4]))
+            tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4], itemsList[i+5]))
 
         # Placing the elements
         btn_insertData.place(x=230,y=220,width=120,height=40)
         frame.place(x=450,y=0)
         btn_Peaks.place(x=230,y=400,width=120,height=40)
-        scrollbar.place(x=532,y=650, height=227)
-        tree.place(x=30,y=650)
+        scrollbar.place(x=570,y=650, height=227)
+        tree.place(x=10,y=650)
         lbl_selection.place(x=130,y=350, width=300)
         lbl_selected.place(x=358,y=350)
         btn_compareData.place(x=230,y=450,width=120,height=40)
