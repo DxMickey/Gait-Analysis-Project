@@ -44,3 +44,23 @@ def insertIntoAddedTable(sensorId, tableName, subject, senLoc, senCon, date):
         conn.close()
     except Error as e:
         print(e)
+
+def createPeaks(name):
+    try:
+        conn = connect("oldData.db")
+        tableName = name + "_peaks"
+        cur = conn.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS {} (peak DECIMAL);".format(tableName))
+        conn.close()
+    except Error as e:
+        print(e)
+
+def insertPeaks(tableName, peak):
+    conn = connect("oldData.db")
+    try:
+        cur = conn.cursor()
+        cur.execute("INSERT INTO \"{}_peaks\" VALUES (\"{}\");".format(tableName, peak))
+        conn.commit()
+        conn.close()
+    except Error as e:
+        print(e)

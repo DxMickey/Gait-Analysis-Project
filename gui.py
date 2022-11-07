@@ -23,7 +23,7 @@ from matplotlib.figure import Figure
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from database import connect, additionalDataTable
+from database import connect, additionalDataTable, insertPeaks, createPeaks
 from dataHandler import getFilteredData, readFileIntoDF, getPeaks,getGaitCycles
 from baselineFinder import getBaseline
 from calculations import addCols
@@ -46,10 +46,10 @@ class UI(tk.Tk):
 
         global lastButton 
         global selectedItems
+        global peaks
         
         secondFrame = None
-        secondPeaks = None
-        
+        secondPeaks = None      
 
 
         def insertData():
@@ -274,7 +274,7 @@ class UI(tk.Tk):
             filtered_acc = df.filtered_acc
 
              # Get peaks in filtered data
-            peaks = getPeaks(filtered_acc,getLocation())
+            peaks = getPeaks(filtered_acc,getLocation(lbl_selected['text']))
             filtered_acc = df.filtered_acc
 
             axes.clear()
@@ -291,35 +291,26 @@ class UI(tk.Tk):
             lastButton = "findPeaks"
 
 
-        def compareData(item, color, count):
-            global dots, filtered_acc, line, peaks, lastButton, secondFrame, secondPeaks
+        def compareData():
             
-            df = readFileIntoDF(item)
+            global dots, filtered_acc, line, peaks, lastButton, selectedItems
+            axes.clear()
+            df = readFileIntoDF(selectedItems[0])
             #axes.set_title(lbl_selected['text'])
-            
-            if count == 0:
-                self.df = df
-            else:
-                secondFrame = df
+            self.df = df
             filtered_acc = getFilteredData(df, int(lbl_filter_value['text']))
 
-            # This adds the time parameter
+             # This adds the time parameter
             df.insert(len(df.columns), "filtered_acc", filtered_acc)
             filtered_acc = df.filtered_acc
 
-            # Get peaks in filtered data
-            if count == 0:
-                peaks = getPeaks(filtered_acc,getLocation(item))
-                dots, = axes.plot(filtered_acc[peaks].to_frame(),
-                    ".", markersize=20, picker=True)
-            else:
-                secondPeaks = getPeaks(filtered_acc,getLocation(item))
-                dots, = axes.plot(filtered_acc[secondPeaks].to_frame(),
-                    ".", markersize=20, picker=True)
+             # Get peaks in filtered data
+            peaks = getPeaks(filtered_acc,getLocation(selectedItems[0]))
             filtered_acc = df.filtered_acc
 
-            line, = axes.plot(filtered_acc, color)
-
+            line, = axes.plot(filtered_acc)
+            dots, = axes.plot(filtered_acc[peaks].to_frame(),
+                    ".", markersize=20, picker=True)
 
             axes.grid(True, 'both')
             axes.set_xlabel("time [cs]")
@@ -327,57 +318,61 @@ class UI(tk.Tk):
 
             figure_canvas.draw()
             lastButton = "compareData"
-        
-        def pressCompare():
-            axes.clear()
-            count = 0
-            for item in selectedItems:
-                compareData(item, colorList[count], count)
-                count += 1
-                
 
-            
+        def generateData(i):
+            global filtered_acc, selectedItems
+            df = readFileIntoDF(selectedItems[i])
+            self.df = df
+            filtered_acc = getFilteredData(df, int(lbl_filter_value['text']))
+
+             # This adds the time parameter
+            df.insert(len(df.columns), "filtered_acc", filtered_acc)
+            filtered_acc = df.filtered_acc
 
         
         def compareGaits():
-            
+
+            global filtered_acc, lastButton
+
             axes.clear()
-            global peaks, line, filtered_acc, lastButton, secondPeaks, secondFrame, selectedItems
-            # peaks = peaks[peaks != 0]  # filter all the 0s aka stuff user just removed
-            gaitCycles = getGaitCycles(peaks, self.df)
+            count = 0
             
-            for cycle in gaitCycles:
-                axes.plot(cycle.time,cycle.filtered_acc, "red")
+            for item in selectedItems:
 
-            axes.grid(True, 'both')
-            axes.set_xlabel("time [cs]")
-            axes.set_ylabel("Acceleration [ms^2]")
-            figure_canvas.draw()
+            
+                conn = connect("oldData.db")
+                conn.row_factory = lambda cursor, row: row[0]
+                tableName = item + "_peaks"
+                res = conn.execute("SELECT peak FROM \"{}\";".format(tableName))
+                
+                peaksList = res.fetchall()
+                conn.close()
 
-            if len(selectedItems) > 1:
-                gaitCycles = getGaitCycles(secondPeaks, secondFrame)
+                generateData(count)
+
+                # # peaks = peaks[peaks != 0]  # filter all the 0s aka stuff user just removed
+                gaitCycles = getGaitCycles(peaksList, self.df)
                 
                 for cycle in gaitCycles:
-                    axes.plot(cycle.time,cycle.filtered_acc, "yellow")
+                    axes.plot(cycle.time,cycle.filtered_acc, colorList[count])
 
                 axes.grid(True, 'both')
                 axes.set_xlabel("time [cs]")
                 axes.set_ylabel("Acceleration [ms^2]")
                 figure_canvas.draw()
+                count += 1
 
             lastButton = "compareGaits"
 
         def handlePick(event):
-            global peaks, secondFrame, secondPeaks
+            
+            global peaks
             global filtered_acc
             ind = event.ind
-            print(ind)
             # event index might be an array if 2 peaks are overlapping
             # for i in ind:
             #     peaks[i] = 0
-            print(peaks)
             peaks = np.delete(peaks,ind)
-            print(peaks)
             df = self.df
 
              # This adds the time parameter
@@ -394,19 +389,7 @@ class UI(tk.Tk):
             axes.set_ylabel("Acceleration [ms^2]")
 
             
-            if len(secondFrame) > 1:
-                secondPeaks = np.delete(secondPeaks,ind)
-                df = secondFrame
-
-                # This adds the time parameter
-                filtered_acc = df.filtered_acc
-
-                # Get peaks in filtered data
-                axes.plot(filtered_acc)
-                axes.plot(filtered_acc[secondPeaks].to_frame(),
-                        ".", markersize=20, picker=True)
-
-                figure_canvas.draw()
+            figure_canvas.draw()
 
         
 
@@ -417,6 +400,13 @@ class UI(tk.Tk):
             else:
                 sensorId = "Unknown"
             return sensorId
+
+        def savePeaks():
+            global peaks, selectedItems
+            createPeaks(selectedItems[0])
+            print(peaks)
+            for peak in peaks:
+                insertPeaks(selectedItems[0], peak)
 
 
 
@@ -459,7 +449,7 @@ class UI(tk.Tk):
             text="Show filtered peaks",
             bg="blue",
             fg="yellow",
-            command=pressCompare
+            command=compareData
 
         )
 
@@ -481,6 +471,14 @@ class UI(tk.Tk):
             text= "39",
             bg="white",
             font=("Arial", 15)
+        )
+
+        btn_savePeaks = tk.Button(
+            text="Save peaks",
+            bg="blue",
+            fg="yellow",
+            command=savePeaks
+
         )
 
         def slider_changed(val):
@@ -582,6 +580,8 @@ class UI(tk.Tk):
         slider_filter.place(x=190,y=585,width=200,height=25)
         lbl_filter.place(x=250,y=555)
         lbl_filter_value.place(x=390,y=583)
+
+        btn_savePeaks.place(x=230,y=440,width=120,height=40)
 
 
 
