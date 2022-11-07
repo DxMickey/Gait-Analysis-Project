@@ -371,10 +371,13 @@ class UI(tk.Tk):
             global peaks, secondFrame, secondPeaks
             global filtered_acc
             ind = event.ind
+            print(ind)
             # event index might be an array if 2 peaks are overlapping
             # for i in ind:
             #     peaks[i] = 0
+            print(peaks)
             peaks = np.delete(peaks,ind)
+            print(peaks)
             df = self.df
 
              # This adds the time parameter
