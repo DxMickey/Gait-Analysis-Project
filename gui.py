@@ -30,6 +30,7 @@ from calculations import addCols
 from matplotlib.backend_bases import key_press_handler
 import  numpy as np
 
+sensorIdFileName = "sensorname.txt" # Put the name of the sensor ID file here if it changes
 
 class UI(tk.Tk):
     def __init__(self):
@@ -128,8 +129,9 @@ class UI(tk.Tk):
             tree.delete(*tree.get_children())
             itemsList = getData()
             
-            for i in range(0,len(itemsList),5):
-                tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4]))
+            for i in range(0,len(itemsList),6):
+                tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4], itemsList[i+5]))
+
         def additionalData(df: DataFrame, file: File):
             global dataBox
             dataBox = tk.Tk()
@@ -150,7 +152,7 @@ class UI(tk.Tk):
             lblSensorLoc = tk.Label(dataBox, text="Sensor location:")
             lblSensorLoc.grid(row=3,column=1,pady=25)
 
-            sensorLoc = tk.StringVar(dataBox, "lamp")
+            sensorLoc = tk.StringVar(dataBox, "")
             rdSL1 = tk.Radiobutton(dataBox, text="Ankle", variable=sensorLoc, value="Ankle", tristatevalue="x")
             rdSL1.grid(row=3,column=2)
             rdSL2 = tk.Radiobutton(dataBox, text="Foot", variable=sensorLoc, value="Foot", tristatevalue="x")
@@ -163,9 +165,11 @@ class UI(tk.Tk):
             txtSensorCon = tk.Text(dataBox, height=1, width=20)
             txtSensorCon.grid(row=6, column=2)
 
+            sensorId = getSensorId()
+
             btn_yes = Button(dataBox, text="SAVE", command=lambda: 
             [   
-                additionalDataTable(txtTableName.get("1.0", "end-1c"), txtSubjectName.get("1.0", "end-1c"), sensorLoc.get(), txtSensorCon.get("1.0", "end-1c"), dateAndTime(file)),
+                additionalDataTable(sensorId, txtTableName.get("1.0", "end-1c"), txtSubjectName.get("1.0", "end-1c"), sensorLoc.get(), txtSensorCon.get("1.0", "end-1c"), dateAndTime(file)),
                 toSQL(df, txtTableName.get("1.0", "end-1c"))
             ])
             btn_yes.grid(row=7,column=2, pady=25)
@@ -475,8 +479,6 @@ class UI(tk.Tk):
         
 
         itemsList = getData()
-        
-        print(len(itemsList))
         for i in range(0,len(itemsList),6):
 
             tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4], itemsList[i+5]))
