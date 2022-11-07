@@ -43,7 +43,8 @@ class UI(tk.Tk):
         #Set the resizable property False
         self.resizable(False, False)
 
-        global lastButton
+        global lastButton 
+        global selectedItems
         
 
 
@@ -126,6 +127,11 @@ class UI(tk.Tk):
             refreshTree()
 
         def refreshTree():
+            """ 
+            Refreshes items in tree widget by deleting everything and loading new items from database
+           
+            """
+
             tree.delete(*tree.get_children())
             itemsList = getData()
             
@@ -188,7 +194,7 @@ class UI(tk.Tk):
             res = conn.execute("SELECT \"Sensor location\" FROM \"{}\";".format(tableName))
             location = res.fetchone()
             conn.close()
-            print(location)
+          
             if "Ankle" in location:
                 return 14
             elif "Shank" in location: 
@@ -215,11 +221,30 @@ class UI(tk.Tk):
             return dataList
 
         def selectedSave(a):
-            saveID = tree.focus()
-            saveDict = tree.item(saveID)
-            saveText = saveDict['values'][0]
+            """ 
+            Get name of selected item in tree widget and change lbl_selected text into the name
+           
+            """
+            global selectedItems
+
+            saveID = tree.selection()
+            saveText = []
+            itemNames = ''
+            for i in saveID:
+                saveText.append(tree.item(i)['values'][0])
             
-            lbl_selected.config(text = saveText)
+            if len(saveText) > 1:
+                count = 1
+                for i in saveText:
+                    itemNames += str(i)
+                    if count < len(saveText):
+                        itemNames += ' + '
+                    count += 1
+            else:
+                itemNames = saveText
+            selectedItems = itemNames
+
+            lbl_selected.config(text = itemNames)
 
         def findPeaks():
             """
@@ -261,23 +286,24 @@ class UI(tk.Tk):
             figure_canvas.draw()
             lastButton = "findPeaks"
 
-        def compareData():
+
+        def compareData(item):
             global dots, filtered_acc, line, peaks, lastButton
-            axes.clear()
-            df = readFileIntoDF(lbl_selected['text'])
+            
+            df = readFileIntoDF(item)
             #axes.set_title(lbl_selected['text'])
             self.df = df
             filtered_acc = getFilteredData(df, int(lbl_filter_value['text']))
 
-             # This adds the time parameter
+            # This adds the time parameter
             df.insert(len(df.columns), "filtered_acc", filtered_acc)
             filtered_acc = df.filtered_acc
 
-             # Get peaks in filtered data
+            # Get peaks in filtered data
             peaks = getPeaks(filtered_acc,getLocation())
             filtered_acc = df.filtered_acc
 
-            line, = axes.plot(filtered_acc)
+            line, = axes.plot(filtered_acc, c=np.random.rand(3,))
             dots, = axes.plot(filtered_acc[peaks].to_frame(),
                     ".", markersize=20, picker=True)
 
@@ -285,8 +311,16 @@ class UI(tk.Tk):
             axes.set_xlabel("time [cs]")
             axes.set_ylabel("Acceleration [ms^2]")
 
-            figure_canvas.draw()
+            
             lastButton = "compareData"
+        
+        def pressCompare():
+            axes.clear()
+            for item in selectedItems:
+                compareData(item)
+
+            figure_canvas.draw()
+
         
         def compareGaits():
             
@@ -330,20 +364,7 @@ class UI(tk.Tk):
             
             figure_canvas.draw()
 
-        def slider_changed(val):
-            global lastButton
-            lbl_filter_value.config(text = (math.floor(slider_filter.get())))
-            
-            if(lastButton == "compareGaits"):
-                return
-            match lastButton:
-                case 'findPeaks':
-                    findPeaks()
-                case 'compareData':
-                    compareData()
-                case 'compareGaits':
-                    compareData()
-                    compareGaits()
+        
 
         def getSensorId():
             tester = getUSBDrive(sensorIdFileName)
@@ -377,17 +398,16 @@ class UI(tk.Tk):
         )
 
         lbl_selection = tk.Label(
-            text= "Selected saved file is:",
+            text= "Selected:",
             bg="white",
-            font=("Arial", 13)
+            font=("Arial", 15)
         )
 
         lbl_selected = tk.Label(
             text= "None",
             bg="white",
-            font=("Arial", 13),
-            anchor=W,
-            wraplength=150
+            font=("Arial", 15),
+            anchor=W
         )
 
         
@@ -395,7 +415,7 @@ class UI(tk.Tk):
             text="Show filtered peaks",
             bg="blue",
             fg="yellow",
-            command=compareData
+            command=pressCompare
 
         )
 
@@ -406,18 +426,6 @@ class UI(tk.Tk):
             command=compareGaits
 
         )
-
-        current_value = tk.IntVar()
-
-        slider_filter = ttk.Scale(
-            from_=0,
-            to=100,
-            orient='horizontal',
-            command=slider_changed,
-            variable=current_value
-        )
-
-        slider_filter.set(39)
         
         lbl_filter = tk.Label(
             text= "Filter value",
@@ -431,7 +439,38 @@ class UI(tk.Tk):
             font=("Arial", 15)
         )
 
+        def slider_changed(val):
+            """ 
+            Check if any button was pressed before and update lbl_filter to new slider value
+           
+            """
 
+            global lastButton
+            lbl_filter_value.config(text = (math.floor(slider_filter.get())))
+            
+            if(lastButton == "compareGaits"):
+                return
+            match lastButton:
+                case 'findPeaks':
+                    findPeaks()
+                case 'compareData':
+                    compareData()
+                case 'compareGaits':
+                    compareData()
+                    compareGaits()
+
+        
+        current_value = tk.IntVar()
+
+        slider_filter = ttk.Scale(
+            from_=0,
+            to=100,
+            orient='horizontal',
+            command=slider_changed,
+            variable=current_value
+        )
+
+        slider_filter.set(39)
 
         frame = tk.Frame(self)
 
@@ -484,15 +523,18 @@ class UI(tk.Tk):
             tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4], itemsList[i+5]))
 
         # Placing the elements
-        btn_insertData.place(x=230,y=220,width=120,height=40)
+        btn_insertData.place(x=230,y=130,width=120,height=40)
         frame.place(x=450,y=0)
-        btn_Peaks.place(x=230,y=400,width=120,height=40)
+        btn_Peaks.place(x=230,y=220,width=120,height=40)
         scrollbar.place(x=570,y=650, height=227)
         tree.place(x=10,y=650)
-        lbl_selection.place(x=130,y=350, width=300)
-        lbl_selected.place(x=358,y=350)
-        btn_compareData.place(x=230,y=450,width=120,height=40)
-        btn_compareGait.place(x=230,y=500,width=120,height=40)
+        
+        lbl_selection.place(x=5,y=620)
+        lbl_selected.place(x=90,y=620)
+        
+        btn_compareData.place(x=230,y=280,width=120,height=40)
+        btn_compareGait.place(x=230,y=340,width=120,height=40)
+       
         slider_filter.place(x=190,y=585,width=200,height=25)
         lbl_filter.place(x=250,y=555)
         lbl_filter_value.place(x=390,y=583)
