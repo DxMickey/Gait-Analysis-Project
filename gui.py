@@ -26,6 +26,7 @@ from dataHandler import getFilteredData, readFileIntoDF, getPeaks,getGaitCycles
 from baselineFinder import getBaseline
 from calculations import addCols
 from matplotlib.backend_bases import key_press_handler
+import  numpy as np
 
 
 class UI(tk.Tk):
@@ -259,7 +260,6 @@ class UI(tk.Tk):
             df = readFileIntoDF(lbl_selected['text'])
             #axes.set_title(lbl_selected['text'])
             self.df = df
-            unfiltered_acc = df.averagea
             filtered_acc = getFilteredData(df, int(lbl_filter_value['text']))
 
              # This adds the time parameter
@@ -269,7 +269,6 @@ class UI(tk.Tk):
              # Get peaks in filtered data
             peaks = getPeaks(filtered_acc,getLocation())
             filtered_acc = df.filtered_acc
-            a = filtered_acc[peaks]
 
             line, = axes.plot(filtered_acc)
             dots, = axes.plot(filtered_acc[peaks].to_frame(),
@@ -286,7 +285,7 @@ class UI(tk.Tk):
             
             axes.clear()
             global peaks, line, filtered_acc, lastButton
-            peaks = peaks[peaks != 0]  # filter all the 0s aka stuff user just removed
+            # peaks = peaks[peaks != 0]  # filter all the 0s aka stuff user just removed
             gaitCycles = getGaitCycles(peaks, self.df)
             
             for cycle in gaitCycles:
@@ -303,17 +302,33 @@ class UI(tk.Tk):
             global filtered_acc
             ind = event.ind
             # event index might be an array if 2 peaks are overlapping
-            for i in ind:
-                peaks[i] = 0
+            # for i in ind:
+            #     peaks[i] = 0
+            peaks = np.delete(peaks,ind)
+            df = self.df
 
-            dots.set_xdata(peaks)
+             # This adds the time parameter
+            filtered_acc = df.filtered_acc
+
+             # Get peaks in filtered data
+            axes.clear()
+            axes.plot(filtered_acc)
+            axes.plot(filtered_acc[peaks].to_frame(),
+                    ".", markersize=20, picker=True)
+
+            axes.grid(True, 'both')
+            axes.set_xlabel("time [cs]")
+            axes.set_ylabel("Acceleration [ms^2]")
+
+            
             figure_canvas.draw()
 
         def slider_changed(val):
             global lastButton
-            print (math.floor(slider_filter.get()))
             lbl_filter_value.config(text = (math.floor(slider_filter.get())))
             
+            if(lastButton == "compareGaits"):
+                return
             match lastButton:
                 case 'findPeaks':
                     findPeaks()
