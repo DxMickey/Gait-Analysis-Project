@@ -219,16 +219,37 @@ class UI(tk.Tk):
             
             """
             global lastButton
+            if self.df is None:
+                print("No data loaded in") #throw some sort of dialogbox or smth
+                self.df = readFileIntoDF(lbl_selected['text'])
+            elif self.df.empty == True:
+                print("Couldnt read selected data file (DataFrame was empty")
+                return
+            
+            df = readFileIntoDF(lbl_selected['text'])
+            #axes.set_title(lbl_selected['text'])
+            self.df = df
+            unfiltered_acc = df.averagea
+            filtered_acc = getFilteredData(df, int(lbl_filter_value['text']))
+
+             # This adds the time parameter
+            df.insert(len(df.columns), "filtered_acc", filtered_acc)
+            filtered_acc = df.filtered_acc
+
+             # Get peaks in filtered data
+            peaks = getPeaks(filtered_acc,getLocation())
+            filtered_acc = df.filtered_acc
 
             axes.clear()
-            list1, list2 = peaks.main(lbl_selected['text'], int(lbl_filter_value['text']))
-            axes.plot(list1[0])
-            axes.plot(list2[0], linewidth = '2')
-            axes.axhline(getLocation(), linewidth = '3', color = 'r')
-            #figure.suptitle('Acceleration ' + str(0), fontsize='30')
+            line, = axes.plot(filtered_acc)
+            axes.plot(unfiltered_acc)
+            dots, = axes.plot(filtered_acc[peaks].to_frame(),
+                    ".", markersize=20, picker=False)
+
             axes.grid(True, 'both')
-            #axes.set_xlabel("time [cs]")
-            #axes.set_ylabel("Acceleration [ms^2]")
+            axes.set_xlabel("time [cs]")
+            axes.set_ylabel("Acceleration [ms^2]")
+
             figure_canvas.draw()
             lastButton = "findPeaks"
 
@@ -318,7 +339,7 @@ class UI(tk.Tk):
 
 
         btn_Peaks = tk.Button(
-            text="Find peaks",
+            text="Show data",
             bg="blue",
             fg="yellow",
             command=findPeaks
@@ -341,7 +362,7 @@ class UI(tk.Tk):
 
         
         btn_compareData = tk.Button(
-            text="CompareData",
+            text="Show filtered peaks",
             bg="blue",
             fg="yellow",
             command=compareData
