@@ -51,10 +51,11 @@ def editAdditionalDataTable(sensorId, tableName, subject, senLoc, senCon, origin
     conn = connect("oldData.db")
 
     cur = conn.cursor()
-    cur.execute("ALTER TABLE \"{}_data\" RENAME TO \"{}_data\";".format(originalName, tableName))
-    conn.commit()
-    cur.execute("ALTER TABLE \"{}\" RENAME TO \"{}\";".format(originalName, tableName))
-    conn.commit()
+    if(originalName != tableName):
+        cur.execute("ALTER TABLE \"{}_data\" RENAME TO \"{}_data\";".format(originalName, tableName))
+        conn.commit()
+        cur.execute("ALTER TABLE \"{}\" RENAME TO \"{}\";".format(originalName, tableName))
+        conn.commit()
     cur.execute("UPDATE \"{}_data\" SET \"Sensor ID\"=\"{}\", Subject=\"{}\", \"Sensor location\"=\"{}\", \"Sensor condition\"=\"{}\";".format(tableName, sensorId, subject, senLoc, senCon))
     conn.commit()
     conn.close()
