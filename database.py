@@ -56,6 +56,8 @@ def editAdditionalDataTable(sensorId, tableName, subject, senLoc, senCon, origin
         conn.commit()
         cur.execute("ALTER TABLE \"{}\" RENAME TO \"{}\";".format(originalName, tableName))
         conn.commit()
+        cur.execute("ALTER TABLE \"{}_peaks\" RENAME TO \"{}_peaks\";".format(originalName, tableName))
+        conn.commit()
     cur.execute("UPDATE \"{}_data\" SET \"Sensor ID\"=\"{}\", Subject=\"{}\", \"Sensor location\"=\"{}\", \"Sensor condition\"=\"{}\";".format(tableName, sensorId, subject, senLoc, senCon))
     conn.commit()
     conn.close()
@@ -66,6 +68,7 @@ def deleteAllSelectedData(tableName):
     cur = conn.cursor()
     cur.execute("DROP TABLE \"{}_data\";".format(tableName))
     cur.execute("DROP TABLE \"{}\";".format(tableName))
+    cur.execute("DROP TABLE IF EXISTS \"{}_peaks\";".format(tableName))
     conn.commit()
     conn.close()
 
