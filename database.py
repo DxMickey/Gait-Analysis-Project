@@ -68,3 +68,18 @@ def insertPeaks(tableName, peak):
         conn.close()
     except Error as e:
         print(e)
+
+def returnPeaks(item):
+    conn = connect("oldData.db")
+    try:
+       
+        conn.row_factory = lambda cursor, row: row[0]
+        tableName = item + "_peaks"
+        res = conn.execute("SELECT peak FROM \"{}\";".format(tableName))
+        
+        peaksList = res.fetchall()
+        conn.close()
+        return peaksList
+
+    except Error as e:
+        print(e)

@@ -23,7 +23,7 @@ from matplotlib.figure import Figure
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from database import connect, additionalDataTable, insertPeaks, createPeaks
+from database import connect, additionalDataTable, insertPeaks, createPeaks, returnPeaks
 from dataHandler import getFilteredData, readFileIntoDF, getPeaks,getGaitCycles
 from baselineFinder import getBaseline
 from calculations import addCols
@@ -345,18 +345,12 @@ class UI(tk.Tk):
             
             for item in selectedItems:
 
-            
-                conn = connect("oldData.db")
-                conn.row_factory = lambda cursor, row: row[0]
-                tableName = item + "_peaks"
-                res = conn.execute("SELECT peak FROM \"{}\";".format(tableName))
-                
-                peaksList = res.fetchall()
-                conn.close()
 
                 generateData(count)
 
                 # # peaks = peaks[peaks != 0]  # filter all the 0s aka stuff user just removed
+                peaksList = returnPeaks(item)
+                
                 gaitCycles = getGaitCycles(peaksList, self.df)
                 
                 for cycle in gaitCycles:
