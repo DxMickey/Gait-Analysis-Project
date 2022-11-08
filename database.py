@@ -50,10 +50,14 @@ def createPeaks(name):
         conn = connect("oldData.db")
         tableName = name + "_peaks"
         cur = conn.cursor()
+        cur.execute("DROP TABLE IF EXISTS {};".format(tableName))
         cur.execute("CREATE TABLE IF NOT EXISTS {} (peak DECIMAL);".format(tableName))
         conn.close()
     except Error as e:
         print(e)
+
+
+
 
 def insertPeaks(tableName, peak):
     conn = connect("oldData.db")

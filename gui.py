@@ -29,9 +29,11 @@ from baselineFinder import getBaseline
 from calculations import addCols
 from matplotlib.backend_bases import key_press_handler
 import  numpy as np
+import matplotlib.patches as mpatches
+from matplotlib.patches import Patch
 
 sensorIdFileName = "sensorname.txt" # Put the name of the sensor ID file here if it changes
-colorList = ["blue", "red"]
+colorList = ["blue", "red", "green", "brown", "black"]
 
 class UI(tk.Tk):
     def __init__(self):
@@ -231,6 +233,7 @@ class UI(tk.Tk):
             """
             global selectedItems
 
+            tree.selection_toggle(tree.focus())
             saveID = tree.selection()
             saveText = []
             itemNames = ''
@@ -242,7 +245,7 @@ class UI(tk.Tk):
                 for i in saveText:
                     itemNames += str(i)
                     if count < len(saveText):
-                        itemNames += ' + '
+                        itemNames += ' & '
                     count += 1
             else:
                 itemNames = saveText
@@ -264,7 +267,7 @@ class UI(tk.Tk):
                 return
             
             df = readFileIntoDF(lbl_selected['text'])
-            #axes.set_title(lbl_selected['text'])
+            axes.set_title(lbl_selected['text'])
             self.df = df
             unfiltered_acc = df.averagea
             filtered_acc = getFilteredData(df, int(lbl_filter_value['text']))
@@ -296,7 +299,7 @@ class UI(tk.Tk):
             global dots, filtered_acc, line, peaks, lastButton, selectedItems
             axes.clear()
             df = readFileIntoDF(selectedItems[0])
-            #axes.set_title(lbl_selected['text'])
+            axes.set_title(lbl_selected['text'])
             self.df = df
             filtered_acc = getFilteredData(df, int(lbl_filter_value['text']))
 
@@ -335,7 +338,10 @@ class UI(tk.Tk):
             global filtered_acc, lastButton
 
             axes.clear()
+            axes.set_title(lbl_selected['text'])
+            
             count = 0
+            
             
             for item in selectedItems:
 
@@ -355,14 +361,33 @@ class UI(tk.Tk):
                 
                 for cycle in gaitCycles:
                     axes.plot(cycle.time,cycle.filtered_acc, colorList[count])
+                
 
+
+            
                 axes.grid(True, 'both')
                 axes.set_xlabel("time [cs]")
                 axes.set_ylabel("Acceleration [ms^2]")
                 figure_canvas.draw()
                 count += 1
 
+            # where some data has already been plotted to ax
+            handles, labels = axes.get_legend_handles_labels()
+            
+            for i in range(0, count):
+                
+
+                
+                legendText = mpatches.Patch(color=colorList[i], label=selectedItems[i])
+                
+                handles.append(legendText)
+
+            axes.legend(handles=handles)
+            figure_canvas.draw()
+
             lastButton = "compareGaits"
+
+
 
         def handlePick(event):
             
@@ -496,9 +521,8 @@ class UI(tk.Tk):
                 case 'findPeaks':
                     findPeaks()
                 case 'compareData':
-                    pressCompare()
-                case 'compareGaits':
                     compareData()
+                case 'compareGaits':
                     compareGaits()
 
         
@@ -511,6 +535,7 @@ class UI(tk.Tk):
             command=slider_changed,
             variable=current_value
         )
+
 
         slider_filter.set(39)
 
@@ -534,7 +559,7 @@ class UI(tk.Tk):
         figure_canvas.mpl_connect("key_press_event", key_press_handler)
 
         #tree
-        tree = ttk.Treeview(self, columns=("tableName", "sensorId", "patientName", "sensor_location", "situation", "date"))
+        tree = ttk.Treeview(self, columns=("tableName", "sensorId", "patientName", "sensor_location", "situation", "date"), selectmode="none")
         
         tree.heading('tableName', text="Saved name", anchor=W)
         tree.heading('sensorId', text="Sensor ID", anchor=W)
