@@ -23,7 +23,7 @@ from matplotlib.figure import Figure
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from database import connect, additionalDataTable, insertPeaks, createPeaks, returnPeaks
+from database import connect, additionalDataTable, editAdditionalDataTable, deleteAllSelectedData, createPeaks, returnPeaks,  insertPeaks
 from dataHandler import getFilteredData, readFileIntoDF, getPeaks,getGaitCycles
 from baselineFinder import getBaseline
 from calculations import addCols
@@ -54,18 +54,21 @@ class UI(tk.Tk):
         secondPeaks = None      
 
 
-        def insertData():
+        def insertData(event):
             """ 
             User chooses which file to save data from
            
             """
 
             tk.messagebox.showinfo("Gait analysis",  "Choose file to save")
+            global dFrame, fileDate
             file = filedialog.askopenfilename()
             df = pd.read_csv(file)
             df.columns = ['stamp','battery', 'pressure','temperature','ax','ay','az','gx','gy','gz','mx','my','mz']
             
-            additionalData(df, file)
+            dFrame = df
+            fileDate = dateAndTime(file)
+            additionalData(0)
             self.df = df
             
 
@@ -144,47 +147,87 @@ class UI(tk.Tk):
             for i in range(0,len(itemsList),6):
                 tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4], itemsList[i+5]))
 
-        def additionalData(df: DataFrame, file: File):
+        def additionalData(event):
             global dataBox
+            save = 0
+            if (event == 0):
+                save = 1
+                dictionary = ["","","","","",""]
+            else:
+                saveID = tree.focus()
+                saveDict = tree.item(saveID)
+                dictionary = [] * 6
+                for i in range(0,len(saveDict)):
+                    dictionary.append(saveDict['values'][i])
+                originalName = dictionary[0]
+            
             dataBox = tk.Tk()
             dataBox.title("Additional data")
-            dataBox.geometry("300x375+800+400")
+            dataBox.geometry("300x425+800+400")
             dataBox.config(bg="lightgray")
 
             lblTableName = tk.Label(dataBox, text="Save name:")
             lblTableName.grid(row=1,column=1,padx=25,pady=25)
             txtTableName = tk.Text(dataBox, height=1, width=20)
+            txtTableName.insert(1.0,dictionary[0])
             txtTableName.grid(row=1,column=2)
 
+            lblSensorID = tk.Label(dataBox, text="Sensor ID:")
+            lblSensorID.grid(row=2,column=1)
+            txtSensorID = tk.Text(dataBox, height=1, width=20)
+            if (save == 1):
+                sensorId = getSensorId()
+            else:
+                sensorId = dictionary[1]
+            txtSensorID.insert(1.0,sensorId)
+            txtSensorID.grid(row=2,column=2)
+
             lblSubjectName = tk.Label(dataBox, text="Subject name:")
-            lblSubjectName.grid(row=2,column=1)
+            lblSubjectName.grid(row=3,column=1,padx=25,pady=25)
             txtSubjectName = tk.Text(dataBox, height=1, width=20)
-            txtSubjectName.grid(row=2,column=2)
+            txtSubjectName.insert(1.0,dictionary[2])
+            txtSubjectName.grid(row=3,column=2)
 
             lblSensorLoc = tk.Label(dataBox, text="Sensor location:")
-            lblSensorLoc.grid(row=3,column=1,pady=25)
+            lblSensorLoc.grid(row=4,column=1)
 
             sensorLoc = tk.StringVar(dataBox, "")
             rdSL1 = tk.Radiobutton(dataBox, text="Ankle", variable=sensorLoc, value="Ankle", tristatevalue="x")
-            rdSL1.grid(row=3,column=2)
+            rdSL1.grid(row=4,column=2)
             rdSL2 = tk.Radiobutton(dataBox, text="Foot", variable=sensorLoc, value="Foot", tristatevalue="x")
-            rdSL2.grid(row=4,column=2)
+            rdSL2.grid(row=5,column=2, pady=25)
             rdSL3 = tk.Radiobutton(dataBox, text="Shank", variable=sensorLoc, value="Shank", tristatevalue="x")
-            rdSL3.grid(row=5,column=2, pady=25)
+            rdSL3.grid(row=6,column=2)
+            sensorLoc.set(dictionary[3])
 
             lblSensorCon = tk.Label(dataBox, text="Sensor condition:")
-            lblSensorCon.grid(row=6, column=1)
+            lblSensorCon.grid(row=7, column=1, pady=25)
             txtSensorCon = tk.Text(dataBox, height=1, width=20)
-            txtSensorCon.grid(row=6, column=2)
+            txtSensorCon.grid(row=7, column=2)
+            txtSensorCon.insert(1.0,dictionary[4])
 
-            sensorId = getSensorId()
-
-            btn_yes = Button(dataBox, text="SAVE", command=lambda: 
-            [   
-                additionalDataTable(sensorId, txtTableName.get("1.0", "end-1c"), txtSubjectName.get("1.0", "end-1c"), sensorLoc.get(), txtSensorCon.get("1.0", "end-1c"), dateAndTime(file)),
-                toSQL(df, txtTableName.get("1.0", "end-1c"))
-            ])
-            btn_yes.grid(row=7,column=2, pady=25)
+            if(save == 1):
+                btn_save = Button(dataBox, text="SAVE", command=lambda: 
+                [   
+                    additionalDataTable(txtSensorID.get("1.0", "end-1c"), txtTableName.get("1.0", "end-1c"), txtSubjectName.get("1.0", "end-1c"), sensorLoc.get(), txtSensorCon.get("1.0", "end-1c"), fileDate),
+                    toSQL(dFrame, txtTableName.get("1.0", "end-1c"))
+                ])
+                btn_save.grid(row=8,column=2, pady=25)
+            else:
+                btn_edit = Button(dataBox, text="EDIT", command=lambda: 
+                [
+                    editAdditionalDataTable(txtSensorID.get("1.0", "end-1c"), txtTableName.get("1.0", "end-1c"), txtSubjectName.get("1.0", "end-1c"), sensorLoc.get(), txtSensorCon.get("1.0", "end-1c"), originalName),
+                    refreshTree(),
+                    dataBox.destroy()
+                ])
+                btn_delete = Button(dataBox, text="DELETE DATA", fg="red", command=lambda: 
+                [
+                    deleteAllSelectedData(originalName),
+                    refreshTree(),
+                    dataBox.destroy()
+                ])
+                btn_delete.grid(row=8,column=2, pady=25)
+                btn_edit.grid(row=8,column=1, pady=25)
 
         def getLocation(table):
             """
@@ -428,15 +471,13 @@ class UI(tk.Tk):
                 insertPeaks(selectedItems[0], peak)
 
 
-
-
   
         
         btn_insertData = tk.Button(
             text="Save new data",
             bg="blue",
             fg="yellow",
-            command=insertData
+            command=lambda: insertData(0)
 
         )
 
@@ -572,6 +613,7 @@ class UI(tk.Tk):
 
         #tree.bind('<Motion>', 'break')
         tree.bind('<ButtonRelease-1>', selectedSave)
+        tree.bind('<Double-Button-1>', additionalData)
 
         #Scrollbar
         scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL, command=tree.yview)
