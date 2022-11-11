@@ -107,7 +107,7 @@ def returnPeaks(item):
         
         peaksList = res.fetchall()
         conn.close()
+        print(peaksList)
         return peaksList
-
-    except Error as e:
-        print(e)
+    except:
+        return []

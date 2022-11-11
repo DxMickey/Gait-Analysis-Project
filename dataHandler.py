@@ -11,6 +11,7 @@ from matplotlib.figure import Figure
 import numpy as np
 from sqlalchemy import create_engine
 from sqlite3 import connect
+from database import returnPeaks
 
 # Input: file path
 # Output: pandas dataframe
@@ -31,7 +32,13 @@ def getFilteredData(df, filterValue):
 
 # Input: dataframe column
 # Output: dataframe rows concerning relevant gait cycles
-def getPeaks(array, y):
+def getPeaks(item,array, y):
+    #Try to get the peaks from DB
+    peaks = returnPeaks(item)
+    if(len(peaks) > 0):
+        return peaks
+    
+    #If no peaks in DB, calculate them
     peaks, _ = find_peaks(array, height=y)
     return peaks
 
