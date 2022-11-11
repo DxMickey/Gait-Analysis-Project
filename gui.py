@@ -24,13 +24,15 @@ matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from database import connect, additionalDataTable, editAdditionalDataTable, deleteAllSelectedData, createPeaks, returnPeaks,  insertPeaks
-from dataHandler import getFilteredData, readFileIntoDF, getPeaks,getGaitCycles
+from dataHandler import *
 from baselineFinder import getBaseline
 from calculations import addCols
 from matplotlib.backend_bases import key_press_handler
 import  numpy as np
 import matplotlib.patches as mpatches
 from matplotlib.patches import Patch
+
+from plotter import *
 
 sensorIdFileName = "sensorname.txt" # Put the name of the sensor ID file here if it changes
 colorList = ["blue", "red", "green", "brown", "black"]
@@ -44,15 +46,31 @@ class UI(tk.Tk):
         self.config(bg="white")
         self.df = None #the dataframe currently loaded into the window
         #Set the resizable property False
-        self.resizable(False, False)
-
+        # self.resizable(False, False)
+        self.ctrlPressed = False
+        self.infoStr = ""
+        
         global lastButton 
         global selectedItems
         global peaks
         
         secondFrame = None
         secondPeaks = None      
-
+        
+        
+        # EVENT LISTENERS
+        #https://stackoverflow.com/questions/32289175/list-of-all-tkinter-events
+        
+        def onKeyPress(e):
+            if e.keycode == 17:
+                self.ctrlPressed = True
+        def onKeyRelease(e):
+            if e.keycode == 17:
+                self.ctrlPressed = False
+                
+        self.bind("<Key>",onKeyPress)
+        self.bind("<KeyRelease>",onKeyRelease)
+        #/EVENT LISTENERS
 
         def insertData(event):
             """ 
@@ -339,41 +357,28 @@ class UI(tk.Tk):
 
         def compareData():
             
-            global dots, filtered_acc, line, peaks, lastButton, selectedItems
+            global peaks,lastButton, selectedItems
             axes.clear()
             df = readFileIntoDF(selectedItems[0])
             axes.set_title(lbl_selected['text'])
             self.df = df
-            filtered_acc = getFilteredData(df, int(lbl_filter_value['text']))
+            sensorLocation = int(lbl_filter_value['text'])
+            filtered_acc = getFilteredData(df,sensorLocation)
 
              # This adds the time parameter
             df.insert(len(df.columns), "filtered_acc", filtered_acc)
             filtered_acc = df.filtered_acc
 
-             # Get peaks in filtered data
-            peaks = getPeaks(filtered_acc,getLocation(selectedItems[0]))
+            peaks = getPeaks(selectedItems[0],filtered_acc,getLocation(selectedItems[0]))
+            
             filtered_acc = df.filtered_acc
 
-            line, = axes.plot(filtered_acc)
-            dots, = axes.plot(filtered_acc[peaks].to_frame(),
-                    ".", markersize=20, picker=True)
-
-            axes.grid(True, 'both')
-            axes.set_xlabel("time [cs]")
-            axes.set_ylabel("Acceleration [ms^2]")
+            plotAccelerationWithPeaks(axes, filtered_acc,peaks)
 
             figure_canvas.draw()
             lastButton = "compareData"
 
-        def generateData(i):
-            global filtered_acc, selectedItems
-            df = readFileIntoDF(selectedItems[i])
-            self.df = df
-            filtered_acc = getFilteredData(df, int(lbl_filter_value['text']))
 
-             # This adds the time parameter
-            df.insert(len(df.columns), "filtered_acc", filtered_acc)
-            filtered_acc = df.filtered_acc
 
         
         def compareGaits():
@@ -388,19 +393,14 @@ class UI(tk.Tk):
             
             for item in selectedItems:
 
-
-                generateData(count)
-
-                # # peaks = peaks[peaks != 0]  # filter all the 0s aka stuff user just removed
+                
+                self.df = generateData(item, int(lbl_filter_value['text']))
                 peaksList = returnPeaks(item)
                 
                 gaitCycles = getGaitCycles(peaksList, self.df)
                 
                 for cycle in gaitCycles:
                     axes.plot(cycle.time,cycle.filtered_acc, colorList[count])
-                
-
-
             
                 axes.grid(True, 'both')
                 axes.set_xlabel("time [cs]")
@@ -431,10 +431,9 @@ class UI(tk.Tk):
             global peaks
             global filtered_acc
             ind = event.ind
-            # event index might be an array if 2 peaks are overlapping
-            # for i in ind:
-            #     peaks[i] = 0
+            
             peaks = np.delete(peaks,ind)
+            
             df = self.df
 
              # This adds the time parameter

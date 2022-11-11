@@ -69,3 +69,11 @@ def normalizeGaitCycles(gaitCycles):
     for cycleDf in gaitCycles:
         normalized.append(normalize(cycleDf))
     return normalized
+def generateData(selectedItem,filterVal):
+    df = readFileIntoDF(selectedItem)
+    filtered_acc = getFilteredData(df, filterVal)
+
+        # This adds the time parameter
+    df.insert(len(df.columns), "filtered_acc", filtered_acc)
+    filtered_acc = df.filtered_acc
+    return df
