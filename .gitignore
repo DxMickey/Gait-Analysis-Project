@@ -5,6 +5,7 @@ __pycache__/
 *.cpython
 # C extensions
 *.so
+*.db
 
 # Distribution / packaging
 bin/
