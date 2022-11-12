@@ -23,7 +23,7 @@ from USB import getUSBDrive
 
 from pandas import DataFrame
 from pyparsing import col
-import AndriiMSc_Number_of_Peaks as peaks
+# import AndriiMSc_Number_of_Peaks as peaks
 import os
 import pandas as pd
 
@@ -34,6 +34,7 @@ from matplotlib.figure import Figure
 from errors import *
 
 from tree import *
+from peakSelect import *
 matplotlib.use("TkAgg")
 
 
@@ -54,7 +55,8 @@ class UI(tk.Tk):
         # self.resizable(False, False)
         self.ctrlPressed = False
         self.infoStr = ""
-
+        
+        self.peakSelector = peakSelect()
         global lastButton
         global selectedItems
         global peaks
@@ -68,13 +70,21 @@ class UI(tk.Tk):
         def onKeyPress(e):
             if e.keycode == 17:
                 self.ctrlPressed = True
-
         def onKeyRelease(e):
             if e.keycode == 17:
                 self.ctrlPressed = False
-
+           
+        def onCtrlZ(e):
+            self.peakSelector.undo()
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+        def onCtrlY(e):
+            self.peakSelector.redo()
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
         self.bind("<Key>", onKeyPress)
         self.bind("<KeyRelease>", onKeyRelease)
+        self.bind("<Control-z>",onCtrlZ)
+        self.bind("<Control-y>",onCtrlY)
+        
         # /EVENT LISTENERS
 
         def insertData(event):
@@ -347,22 +357,14 @@ class UI(tk.Tk):
             filtered_acc = df.filtered_acc
 
             axes.set_title(lbl_selected['text'])
-            axes.clear()
-            line, = axes.plot(filtered_acc)
-            axes.plot(unfiltered_acc)
-            dots, = axes.plot(filtered_acc[peaks].to_frame(),
-                              ".", markersize=20, picker=False)
-
-            axes.grid(True, 'both')
-            axes.set_xlabel("time [cs]")
-            axes.set_ylabel("Acceleration [ms^2]")
+            plotAccelerationWithPeaks(axes,filtered_acc,peaks)
 
             figure_canvas.draw()
             lastButton = "findPeaks"
 
         def compareData():
 
-            global peaks, lastButton, selectedItems
+            global lastButton, selectedItems
             axes.clear()
             df = readFileIntoDF(selectedItems[0])
             axes.set_title(lbl_selected['text'])
@@ -376,6 +378,8 @@ class UI(tk.Tk):
 
             peaks = getPeaks(
                 selectedItems[0], filtered_acc, getLocation(selectedItems[0]))
+            self.peakSelector.setPeaks(peaks)
+            self.infoStr = self.peakSelector.info
 
             filtered_acc = df.filtered_acc
 
@@ -387,10 +391,20 @@ class UI(tk.Tk):
         def compareGaits():
 
             global filtered_acc, lastButton
-
             axes.clear()
             axes.set_title(lbl_selected['text'])
+            
+            if(len(selectedItems) == 1):
+                self.df = generateData(selectedItems[0], int(lbl_filter_value['text']))
+                peaksList = self.peakSelector.cutPeaks()
 
+                gaitCycles = getGaitCycles(peaksList, self.df)
+                plotGaitCycles(axes,gaitCycles,colorList[0])
+                plotGaitCycleLabels(axes,selectedItems,colorList,1)
+                
+                figure_canvas.draw()
+                
+                
             count = 0
 
             for item in selectedItems:
@@ -408,21 +422,27 @@ class UI(tk.Tk):
             lastButton = "compareGaits"
 
         def handlePick(event):
-
-            global peaks
+            
             global filtered_acc
             ind = event.ind
+            if(self.ctrlPressed):
+                print('asdfsadfadsf')
+                self.peakSelector.deletePeak(ind)
+            elif(not self.ctrlPressed):
+                if(event.guiEvent.num == 1): #left click
+                    self.peakSelector.setGaitEvent(ind[0],"first")
+                    self.infoStr = self.peakSelector.info;
+                    print(self.peakSelector.info)
+                elif(event.guiEvent.num ==3): #right click
+                    self.peakSelector.setGaitEvent(ind[0],"last")
+            
+            filtered_acc = self.df.filtered_acc
 
-            peaks = np.delete(peaks, ind)
-
-            df = self.df
-
-            # This adds the time parameter
-            filtered_acc = df.filtered_acc
-
-            plotAccelerationWithPeaks(axes,filtered_acc,peaks)
+            plotAccelerationWithPeaks(axes,filtered_acc,self.peakSelector.getPeaks())
 
             figure_canvas.draw()
+            print("first",self.peakSelector.firstGaitEvent)
+            print("last",self.peakSelector.lastGaitEvent)
 
         def getSensorId():
             tester = getUSBDrive(sensorIdFileName)
@@ -433,9 +453,9 @@ class UI(tk.Tk):
             return sensorId
 
         def savePeaks():
-            global peaks, selectedItems
+            global selectedItems
             createPeaks(selectedItems[0])
-            print(peaks)
+            peaks = self.peakSelector.peaks
             for peak in peaks:
                 insertPeaks(selectedItems[0], peak)
 
@@ -495,7 +515,6 @@ class UI(tk.Tk):
             bg="white",
             font=("Arial", 15)
         )
-
         btn_savePeaks = tk.Button(
             text="Save peaks",
             bg="blue",
@@ -581,6 +600,7 @@ class UI(tk.Tk):
         slider_filter.place(x=190, y=585, width=200, height=25)
         lbl_filter.place(x=250, y=555)
         lbl_filter_value.place(x=390, y=583)
+        
 
         btn_savePeaks.place(x=230, y=440, width=120, height=40)
 
