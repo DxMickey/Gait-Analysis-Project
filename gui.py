@@ -74,16 +74,21 @@ class UI(tk.Tk):
             if e.keycode == 17:
                 self.ctrlPressed = False
            
-        def onCtrlZ(e):
+        def onZ(e):
+            if(not self.ctrlPressed):
+                return
             self.peakSelector.undo()
             plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
-        def onCtrlY(e):
+            figure_canvas.draw()
+        def onY(e):
             self.peakSelector.redo()
             plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            figure_canvas.draw()
+
         self.bind("<Key>", onKeyPress)
         self.bind("<KeyRelease>", onKeyRelease)
-        self.bind("<Control-z>",onCtrlZ)
-        self.bind("<Control-y>",onCtrlY)
+        self.bind("<z>",onZ)
+        self.bind("<y>",onY)
         
         # /EVENT LISTENERS
 
@@ -426,7 +431,6 @@ class UI(tk.Tk):
             global filtered_acc
             ind = event.ind
             if(self.ctrlPressed):
-                print('asdfsadfadsf')
                 self.peakSelector.deletePeak(ind)
             elif(not self.ctrlPressed):
                 if(event.guiEvent.num == 1): #left click

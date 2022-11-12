@@ -7,20 +7,29 @@ class peakSelect:
         self.firstGaitEvent = -1
         self.lastGaitEvent = -1
         self.info = "Set first gait event"
-        self.currQueuePointer = 0
+        self.current = 0
     def setPeaks(self,peaks):
         self.firstGaitEvent = -1
         self.lastGaitEvent = -1
         self.peaks = peaks
+        self.queue.append(peaks)
+        self.current +=1
     def getPeaks(self):
         return self.peaks
     def setGaitEvent(self,index,cmd):
         if(cmd == "last"):
             self.lastGaitEvent = index
             self.peaks = self.peaks[0:index + 1]
+            self.queue.append(self.peaks)
+            self.current +=1
+            
+            
         if(cmd == "first"):
             self.firstGaitEvent = 0
             self.peaks = self.peaks[index:]
+            self.queue.append(self.peaks)
+            self.current +=1
+            
         # if index <= 0:
         #     return
         # if self.firstGaitEvent >=0 and self.lastGaitEvent < 0:
@@ -35,17 +44,18 @@ class peakSelect:
         self.queue.append(self.peaks) #save current state
         self.peaks = np.delete(self.peaks, indices)
         self.info = "Peak deleted. Ctrl + Z to undo"
-        self.currQueuePointer += 1
+        self.queue.append(self.peaks) #save current state
+        
     def undo(self):
-        queuePos = self.currQueuePointer - 1
-        if queuePos <= 0:
-            queuePos = 0
-        self.peaks = self.queue[queuePos]
+        self.current -=1
+        if(self.current < 0):
+            self.current = 0
+        self.peaks = self.queue[self.current]
     def redo(self):
-        queuePos = self.currQueuePointer + 1
-        if queuePos >= len(queuePos):
-            queuePos = len(queuePos) -1
-        self.peaks = self.queue[queuePos]
+        self.current += 1
+        if(self.current > len(self.queue)-1):
+            self.current = len(self.queue)-1
+        self.peaks = self.queue[self.current]
     def cutPeaks(self):
         #cut the peaks
         return self.peaks[self.firstGaitEvent:self.lastGaitEvent]
