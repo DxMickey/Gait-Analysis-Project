@@ -358,11 +358,11 @@ class UI(tk.Tk):
             filtered_acc = df.filtered_acc
 
             # Get peaks in filtered data
-            peaks = getPeaks(filtered_acc, getLocation(lbl_selected['text']))
-            filtered_acc = df.filtered_acc
+            # peaks = getPeaks(filtered_acc, getLocation(lbl_selected['text']))
+            # filtered_acc = df.filtered_acc
 
             axes.set_title(lbl_selected['text'])
-            plotAccelerationWithPeaks(axes,filtered_acc,peaks)
+            plotRawData(axes,df)
 
             figure_canvas.draw()
             lastButton = "findPeaks"
@@ -472,7 +472,7 @@ class UI(tk.Tk):
         )
 
         btn_Peaks = tk.Button(
-            text="Show data",
+            text="Show raw data",
             bg="blue",
             fg="yellow",
             command=findPeaks
