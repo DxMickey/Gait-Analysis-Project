@@ -36,7 +36,13 @@ def plotRawData(axes, df):
     axes.clear()
     axes.plot(df.averagea,color="blue")
     axes.plot(df.filtered_acc,color="red")
-    
     axes.grid(True, 'both')
     axes.set_xlabel("time [cs]")
     axes.set_ylabel("Acceleration [ms^2]")
+def highlightPeak(axes, acceleration,peaks,index):
+    for i in range(len(peaks)):
+        color = None
+        if(i == index):
+            color = "red"
+        axes.plot(acceleration[peaks[i]].to_frame(),
+              ".", markersize=20, picker=True, color=color)

@@ -13,7 +13,7 @@ from msilib.schema import File
 from posixpath import split
 from sqlite3 import DatabaseError
 import tkinter as tk
-from tkinter import CENTER, W, filedialog, Button, ttk
+from tkinter import CENTER, W, filedialog, Button, ttk,Label,Menu
 from turtle import position
 from numpy import pad
 import time
@@ -84,11 +84,51 @@ class UI(tk.Tk):
             self.peakSelector.redo()
             plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
             figure_canvas.draw()
-
+        def handleSetFirstGE():
+            self.peakSelector.setGaitEvent(self.lastPeak,"first")
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            figure_canvas.draw()
+            
+        def handleSetLastGE():
+            self.peakSelector.setGaitEvent(self.lastPeak,"last")
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            figure_canvas.draw()
+            
+        def handleDeletePeak():
+            self.peakSelector.deletePeak(self.lastPeak)
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            figure_canvas.draw()
+        def handleUndo():
+            self.peakSelector.undo()
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            figure_canvas.draw()
+        def handleRedo():
+            self.peakSelector.redo()
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            figure_canvas.draw()
+            
         self.bind("<Key>", onKeyPress)
         self.bind("<KeyRelease>", onKeyRelease)
         self.bind("<z>",onZ)
         self.bind("<y>",onY)
+        
+        self.lastPeak = -1
+        
+        m = Menu(self, tearoff = 0)
+        m.add_command(label ="Set first gait event",command=handleSetFirstGE)
+        m.add_command(label ="Set last gait event",command=handleSetLastGE)
+        m.add_command(label ="Remove peak",command=handleDeletePeak)
+        m.add_separator()
+        m.add_command(label ="Undo (CTRL + Z)", command=handleUndo)
+        m.add_command(label ="Redo (CTRL + Y)",command=handleRedo)
+        
+        def do_popup(event):
+            try:
+                m.tk_popup(event.x_root, event.y_root)
+            finally:
+                m.grab_release()
+        
+        # self.bind("<Button-3>", do_popup)
         
         # /EVENT LISTENERS
 
@@ -427,26 +467,14 @@ class UI(tk.Tk):
             lastButton = "compareGaits"
 
         def handlePick(event):
-            
-            global filtered_acc
-            ind = event.ind
-            if(self.ctrlPressed):
-                self.peakSelector.deletePeak(ind)
-            elif(not self.ctrlPressed):
-                if(event.guiEvent.num == 1): #left click
-                    self.peakSelector.setGaitEvent(ind[0],"first")
-                    self.infoStr = self.peakSelector.info;
-                    print(self.peakSelector.info)
-                elif(event.guiEvent.num ==3): #right click
-                    self.peakSelector.setGaitEvent(ind[0],"last")
-            
+            self.lastPeak = event.ind[0]
+            cmd = do_popup(event.guiEvent)
             filtered_acc = self.df.filtered_acc
-
-            plotAccelerationWithPeaks(axes,filtered_acc,self.peakSelector.getPeaks())
+            peaks = self.peakSelector.getPeaks()
+            plotAccelerationWithPeaks(axes,filtered_acc,peaks)
 
             figure_canvas.draw()
-            print("first",self.peakSelector.firstGaitEvent)
-            print("last",self.peakSelector.lastGaitEvent)
+           
 
         def getSensorId():
             tester = getUSBDrive(sensorIdFileName)

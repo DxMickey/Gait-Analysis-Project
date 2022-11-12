@@ -45,6 +45,7 @@ class peakSelect:
         self.peaks = np.delete(self.peaks, indices)
         self.info = "Peak deleted. Ctrl + Z to undo"
         self.queue.append(self.peaks) #save current state
+        self.current =+1
         
     def undo(self):
         self.current -=1
