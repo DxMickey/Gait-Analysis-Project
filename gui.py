@@ -420,15 +420,7 @@ class UI(tk.Tk):
             # This adds the time parameter
             filtered_acc = df.filtered_acc
 
-            # Get peaks in filtered data
-            axes.clear()
-            axes.plot(filtered_acc)
-            axes.plot(filtered_acc[peaks].to_frame(),
-                      ".", markersize=20, picker=True)
-
-            axes.grid(True, 'both')
-            axes.set_xlabel("time [cs]")
-            axes.set_ylabel("Acceleration [ms^2]")
+            plotAccelerationWithPeaks(axes,filtered_acc,peaks)
 
             figure_canvas.draw()
 
