@@ -30,6 +30,10 @@ import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+
+from errors import *
+
+from tree import *
 matplotlib.use("TkAgg")
 
 
@@ -324,17 +328,13 @@ class UI(tk.Tk):
 
             """
             global lastButton
-            if self.df is None:
-                # throw some sort of dialogbox or smth
-                print("No data loaded in")
-                self.df = readFileIntoDF(lbl_selected['text'])
-            elif self.df.empty == True:
-                print("Couldnt read selected data file (DataFrame was empty")
-                return
-
+            
             df = readFileIntoDF(lbl_selected['text'])
-            axes.set_title(lbl_selected['text'])
             self.df = df
+            if DFIsEmpty(self.df):
+                return
+            
+            
             unfiltered_acc = df.averagea
             filtered_acc = getFilteredData(df, int(lbl_filter_value['text']))
 
@@ -346,6 +346,7 @@ class UI(tk.Tk):
             peaks = getPeaks(filtered_acc, getLocation(lbl_selected['text']))
             filtered_acc = df.filtered_acc
 
+            axes.set_title(lbl_selected['text'])
             axes.clear()
             line, = axes.plot(filtered_acc)
             axes.plot(unfiltered_acc)
@@ -393,30 +394,15 @@ class UI(tk.Tk):
             count = 0
 
             for item in selectedItems:
-
                 self.df = generateData(item, int(lbl_filter_value['text']))
                 peaksList = returnPeaks(item)
 
                 gaitCycles = getGaitCycles(peaksList, self.df)
-
-                for cycle in gaitCycles:
-                    axes.plot(cycle.time, cycle.filtered_acc, colorList[count])
-
-                axes.grid(True, 'both')
-                axes.set_xlabel("time [cs]")
-                axes.set_ylabel("Acceleration [ms^2]")
+                plotGaitCycles(axes,gaitCycles,colorList[count])
                 figure_canvas.draw()
                 count += 1
 
-            # where some data has already been plotted to ax
-            handles, labels = axes.get_legend_handles_labels()
-
-            for i in range(0, count):
-                legendText = mpatches.Patch(
-                    color=colorList[i], label=selectedItems[i])
-                handles.append(legendText)
-
-            axes.legend(handles=handles)
+            plotGaitCycleLabels(axes,selectedItems,colorList,count)
             figure_canvas.draw()
 
             lastButton = "compareGaits"
@@ -574,29 +560,9 @@ class UI(tk.Tk):
         figure_canvas.mpl_connect("pick_event", handlePick)
         figure_canvas.mpl_connect("key_press_event", key_press_handler)
 
-        # tree
-        tree = ttk.Treeview(self, columns=("tableName", "sensorId", "patientName",
-                            "sensor_location", "situation", "date"), selectmode="none")
+        
 
-        tree.heading('tableName', text="Saved name", anchor=W)
-        tree.heading('sensorId', text="Sensor ID", anchor=W)
-        tree.heading('patientName', text="Patient", anchor=W)
-        tree.heading('sensor_location', text="Sensor location", anchor=W)
-        tree.heading('situation', text="Situation", anchor=W)
-        tree.heading('date', text="Date", anchor=W)
-
-        tree.column('#0', minwidth=0, width=0)
-        tree.column('#1', minwidth=85, width=85)
-        tree.column('#2', minwidth=60, width=60)
-        tree.column('#3', minwidth=130, width=130)
-        tree.column('#4', minwidth=75, width=75)
-        tree.column('#5', minwidth=80, width=80)
-        tree.column('#6', minwidth=130, width=130)
-
-        #tree.bind('<Motion>', 'break')
-        tree.bind('<ButtonRelease-1>', selectedSave)
-        tree.bind('<Double-Button-1>', additionalData)
-
+        tree = getTreeWidget(self,selectedSave,additionalData)
         # Scrollbar
         scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL, command=tree.yview)
         tree.configure(yscroll=scrollbar.set)
