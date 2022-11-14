@@ -6,7 +6,7 @@ from matplotlib.backend_bases import key_press_handler
 from calculations import addCols
 from baselineFinder import getBaseline
 from dataHandler import *
-from database import connect, additionalDataTable, editAdditionalDataTable, deleteAllSelectedData, createPeaks, returnPeaks,  insertPeaks, getTables
+from database import connect, additionalDataTable, editAdditionalDataTable, deleteAllSelectedData, createPeaks, returnPeaks,  insertPeaks, getTables, deletePeaks
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from datetime import datetime
 from msilib.schema import File
@@ -20,6 +20,10 @@ import time
 import math
 import win32file
 from USB import getUSBDrive
+import customtkinter
+from tktooltip import ToolTip
+from PIL import ImageTk, Image  
+
 
 from pandas import DataFrame
 from pyparsing import col
@@ -41,6 +45,8 @@ matplotlib.use("TkAgg")
 # Put the name of the sensor ID file here if it changes
 sensorIdFileName = "sensorname.txt"
 colorList = ["blue", "red", "green", "brown", "black"]
+customtkinter.set_appearance_mode("dark")  # Modes: system (default), light, dark
+customtkinter.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
 
 class UI(tk.Tk):
@@ -48,7 +54,7 @@ class UI(tk.Tk):
         super().__init__()
 
         self.title("Gait Analysis")
-        self.geometry("1920x1080")
+        self.geometry("1920x1080+-7+0")
         self.config(bg="white")
         self.df = None  # the dataframe currently loaded into the window
         # Set the resizable property False
@@ -61,8 +67,6 @@ class UI(tk.Tk):
         global selectedItems
         global peaks
 
-        secondFrame = None
-        secondPeaks = None
 
         # EVENT LISTENERS
         # https://stackoverflow.com/questions/32289175/list-of-all-tkinter-events
@@ -197,10 +201,13 @@ class UI(tk.Tk):
 
             tree.delete(*tree.get_children())
             itemsList = getData()
+            tablesList = getTables()
+            for i in range(0,len(itemsList),6):
+                isSaved = "No"
+                if (itemsList[i] + "_peaks") in tablesList:
+                    isSaved = "Yes"
 
-            for i in range(0, len(itemsList), 6):
-                tree.insert('', 'end', values=(
-                    itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4], itemsList[i+5]))
+                tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], isSaved, itemsList[i+2], itemsList[i+3], itemsList[i+4], itemsList[i+5]))
 
         def additionalData(event):
             global dataBox
@@ -379,18 +386,23 @@ class UI(tk.Tk):
             # peaks = getPeaks(filtered_acc, getLocation(lbl_selected['text']))
             # filtered_acc = df.filtered_acc
 
-            axes.set_title(lbl_selected['text'])
+            
             plotRawData(axes,df)
-
+            axes.set_title(lbl_selected['text'])
+            
             figure_canvas.draw()
             lastButton = "findPeaks"
+            btn_resetPeaks.place_forget()
+            btn_savePeaks.place_forget()
+            btn_help.place_forget()
+            lbl_modifyPeaks.place_forget()
 
         def compareData():
 
             global lastButton, selectedItems
             axes.clear()
             df = readFileIntoDF(selectedItems[0])
-            axes.set_title(lbl_selected['text'])
+           
             self.df = df
             sensorLocation = int(lbl_filter_value['text'])
             filtered_acc = getFilteredData(df, sensorLocation)
@@ -408,8 +420,14 @@ class UI(tk.Tk):
 
             plotAccelerationWithPeaks(axes, filtered_acc, peaks)
 
+            axes.set_title(lbl_selected['text'])
             figure_canvas.draw()
             lastButton = "compareData"
+            btn_savePeaks.place(x=140, y=550, width=90, height=40)
+            btn_resetPeaks.place(x=250, y=550, width=90, height=40)
+            btn_help.place(x=360, y=550, width=90, height=40)
+            lbl_modifyPeaks.place(x=134, y=500)
+            
 
         def compareGaits():
 
@@ -443,6 +461,10 @@ class UI(tk.Tk):
             figure_canvas.draw()
 
             lastButton = "compareGaits"
+            btn_resetPeaks.place_forget()
+            btn_savePeaks.place_forget()
+            btn_help.place_forget()
+            lbl_modifyPeaks.place_forget()
 
         def handlePick(event):
             self.lastPeak = event.ind[0]
@@ -469,18 +491,52 @@ class UI(tk.Tk):
             for peak in peaks:
                 insertPeaks(selectedItems[0], peak)
 
-        btn_insertData = tk.Button(
+        def resetPeaks():
+            global selectedItems
+            deletePeaks(selectedItems[0])
+            print(selectedItems[0])
+            refreshTree()
+            compareData()
+        
+        def help():
+            
+            popup = tk.Toplevel()
+            popup.wm_title("Help window")
+            popup.geometry("800x800")
+            popup.config(bg="white")
+
+            path = ".\helpImage.png"
+            image1 = Image.open(path)
+            image1 = image1.resize((830, 530))
+            image1 = ImageTk.PhotoImage(image1)
+            
+            
+            panel = tk.Label(popup, image = image1)
+            
+
+            textbox = customtkinter.CTkTextbox(popup, fg_color="white", text_color="black", width=700, height=180)
+            textbox.insert("0.0", "1) Select the first gait event by clicking on the correct orange peak tip and choose \"Set first gait event\"\n\n"
+            "2) Select the last gait event by clicking on the correct orange peak tip and choose \"Set last gait event\"\n\n"
+            "3) All the peaks from before first and after last gait event will automatically be removed, if there are any peaks that you want to remove manually, select the wanted peak and choose \"Remove peak\"\n\n"
+            "4) You are also able to undo and redo actions by pressing CTRL+Z or CTRL+Y\n\n"
+            "5) Once selecting peaks is done, click on \"Save peaks\" button to save selected peaks to database or click on \"Reset peaks\" if you want the unmodified peaks back")
+            
+            textbox.place(x=20, y=20)
+            panel.place(x=000, y=210)
+
+
+
+            popup.mainloop()
+
+        btn_insertData = customtkinter.CTkButton(
             text="Save new data",
-            bg="blue",
-            fg="yellow",
+
             command=lambda: insertData(0)
 
         )
 
-        btn_Peaks = tk.Button(
+        btn_Peaks = customtkinter.CTkButton(
             text="Show raw data",
-            bg="blue",
-            fg="yellow",
             command=findPeaks
 
         )
@@ -498,24 +554,27 @@ class UI(tk.Tk):
             anchor=W
         )
 
-        btn_compareData = tk.Button(
+        lbl_modifyPeaks = tk.Label(
+            text="Available options for modifying peaks",
+            bg="white",
+            font=("Arial", 14),
+            anchor=W
+        )
+
+        btn_compareData = customtkinter.CTkButton(
             text="Show filtered peaks",
-            bg="blue",
-            fg="yellow",
             command=compareData
 
         )
 
-        btn_compareGait = tk.Button(
-            text="CompareGait",
-            bg="blue",
-            fg="yellow",
+        btn_compareGait = customtkinter.CTkButton(
+            text="Compare gaits",
             command=compareGaits
 
         )
 
         lbl_filter = tk.Label(
-            text="Filter value",
+            text="Filter value:",
             bg="white",
             font=("Arial", 13)
         )
@@ -523,13 +582,23 @@ class UI(tk.Tk):
         lbl_filter_value = tk.Label(
             text="39",
             bg="white",
-            font=("Arial", 15)
+            font=("Arial", 14)
         )
-        btn_savePeaks = tk.Button(
+        btn_savePeaks = customtkinter.CTkButton(
             text="Save peaks",
-            bg="blue",
-            fg="yellow",
             command=savePeaks
+
+        )
+
+        btn_resetPeaks = customtkinter.CTkButton(
+            text="Reset peaks",
+            command=resetPeaks
+
+        )
+
+        btn_help = customtkinter.CTkButton(
+            text="Help",
+            command=help
 
         )
 
@@ -554,7 +623,7 @@ class UI(tk.Tk):
 
         current_value = tk.IntVar()
 
-        slider_filter = ttk.Scale(
+        slider_filter = customtkinter.CTkSlider(
             from_=0,
             to=100,
             orient='horizontal',
@@ -565,6 +634,7 @@ class UI(tk.Tk):
         slider_filter.set(39)
 
         frame = tk.Frame(self)
+        
 
         # create a figure
         figure = plt.Figure(figsize=(16, 11), dpi=100)
@@ -598,24 +668,33 @@ class UI(tk.Tk):
             tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], isSaved, itemsList[i+2], itemsList[i+3], itemsList[i+4], itemsList[i+5]))
 
         # Placing the elements
-        btn_insertData.place(x=230, y=130, width=120, height=40)
+        btn_insertData.place(x=230, y=130, width=130, height=40)
         frame.place(x=450, y=0)
-        btn_Peaks.place(x=230, y=220, width=120, height=40)
+        btn_Peaks.place(x=230, y=220, width=130, height=40)
         scrollbar.place(x=580, y=800, height=230)
         tree.place(x=10, y=800, width= 570, height= 230)
 
         lbl_selection.place(x=5, y=770)
         lbl_selected.place(x=93, y=770)
 
-        btn_compareData.place(x=230, y=280, width=120, height=40)
-        btn_compareGait.place(x=230, y=340, width=120, height=40)
+        btn_compareData.place(x=230, y=280, width=130, height=40)
+        btn_compareGait.place(x=230, y=340, width=130, height=40)
 
-        slider_filter.place(x=190, y=585, width=200, height=25)
-        lbl_filter.place(x=250, y=555)
-        lbl_filter_value.place(x=390, y=583)
+        slider_filter.place(x=200, y=425, width=200, height=25)
+        lbl_filter.place(x=245, y=400)
+        lbl_filter_value.place(x=329, y=400)
+
+
+        ToolTip(btn_insertData, msg="Choose and save a data file to database", delay=0.5)
+        ToolTip(btn_Peaks, msg="Show raw data of selected files", delay=0.5)
+        ToolTip(btn_compareData, msg="Show and modify saved peaks of data files", delay=0.5)
+        ToolTip(btn_compareGait, msg="Compare gait cycles of selected data files", delay=0.5)
+        ToolTip(btn_savePeaks, msg="Save selected peaks to database", delay=0.5)
+        ToolTip(btn_resetPeaks, msg="Delete peaks of current data file from database and reset to unmodified peaks", delay=0.5)
+        ToolTip(slider_filter, msg="Change value of window_length used in Savitzky-Golay filter", delay=0.5)
         
 
-        btn_savePeaks.place(x=230, y=440, width=120, height=40)
+
 
 
 if __name__ == '__main__':

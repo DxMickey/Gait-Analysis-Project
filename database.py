@@ -84,6 +84,14 @@ def createPeaks(name):
     except Error as e:
         print(e)
 
+def deletePeaks(name):
+    conn = connect("oldData.db")
+    tableName = name + "_peaks"
+    cur = conn.cursor()
+    cur.execute("DROP TABLE IF EXISTS \"{}\";".format(tableName))
+    conn.commit()
+    conn.close()
+
 
 
 
