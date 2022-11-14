@@ -225,8 +225,9 @@ class UI(tk.Tk):
                 saveID = tree.focus()
                 saveDict = tree.item(saveID)
                 dictionary = [] * 6
-                for i in range(0, len(saveDict)):
-                    dictionary.append(saveDict['values'][i])
+                for i in range(0, len(saveDict['values'])):
+                    if i != 2:
+                        dictionary.append(saveDict['values'][i])
                 originalName = dictionary[0]
 
             dataBox = tk.Tk()
@@ -500,6 +501,7 @@ class UI(tk.Tk):
             peaks = self.peakSelector.peaks
             for peak in peaks:
                 insertPeaks(selectedItems[0], peak)
+            refreshTree()
 
         def resetPeaks():
             global selectedItems

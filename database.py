@@ -122,8 +122,7 @@ def returnPeaks(item):
         conn.close()
         print(peaksList)
         return peaksList
-    except sqlite3.Error as e:
-        messageBox.showerror("returnPeaks", e)
+    except:
         return []
 
 def getTables():
