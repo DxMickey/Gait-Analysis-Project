@@ -90,6 +90,14 @@ def createPeaks(name):
     except sqlite3.Error as e:
         messageBox.showerror("createPeaks", e)
 
+def deletePeaks(name):
+    conn = connect("oldData.db")
+    tableName = name + "_peaks"
+    cur = conn.cursor()
+    cur.execute("DROP TABLE IF EXISTS \"{}\";".format(tableName))
+    conn.commit()
+    conn.close()
+
 
 
 
@@ -112,6 +120,7 @@ def returnPeaks(item):
         
         peaksList = res.fetchall()
         conn.close()
+        print(peaksList)
         return peaksList
     except sqlite3.Error as e:
         messageBox.showerror("returnPeaks", e)
