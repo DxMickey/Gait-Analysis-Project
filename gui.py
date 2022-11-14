@@ -15,7 +15,7 @@ from sqlite3 import DatabaseError
 import tkinter as tk
 import tkinter.messagebox as messageBox
 import sqlite3
-from tkinter import CENTER, W, filedialog, Button, ttk
+from tkinter import CENTER, W, filedialog, Button, ttk, Label, Menu
 from turtle import position
 from numpy import pad
 import time

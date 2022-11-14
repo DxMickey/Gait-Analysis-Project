@@ -124,3 +124,19 @@ def returnPeaks(item):
         return peaksList
     except sqlite3.Error as e:
         messageBox.showerror("returnPeaks", e)
+
+def getTables():
+    """
+    Method returns all table names from sqlite database
+    :return: list of table names
+    """
+
+    tablesList = []
+    conn = connect("oldData.db")
+    res = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type = \"table\"")
+    for name in res.fetchall():
+        tablesList.append(name[0])
+    conn.close()
+
+    return tablesList
