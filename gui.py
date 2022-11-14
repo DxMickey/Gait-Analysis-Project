@@ -3,6 +3,8 @@ from msilib.schema import File
 from posixpath import split
 from sqlite3 import DatabaseError
 import tkinter as tk
+import tkinter.messagebox as messageBox
+import sqlite3
 from tkinter import CENTER, W, filedialog, Button, ttk
 from turtle import position
 from numpy import pad
@@ -107,10 +109,13 @@ class UI(tk.Tk):
             tablesList = []
             tablesFiltered = []
             conn = connect("oldData.db")
-            res = conn.execute("SELECT name FROM sqlite_master WHERE type='table';")
-            for name in res.fetchall():
-                tablesList.append(name[0])
-            conn.close()
+            try:
+                res = conn.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                for name in res.fetchall():
+                    tablesList.append(name[0])
+                conn.close()
+            except sqlite3.Error as e:
+                messageBox.showerror("getDataTables", e)
             for table in tablesList:
                 if "_data" in table:
                     tablesFiltered.append(table)
@@ -130,9 +135,11 @@ class UI(tk.Tk):
             dataBox.destroy()
             fName = tableName
             conn = connect("oldData.db")
-            df.to_sql(name=fName, con=conn, if_exists='replace', index=False)
-            conn.close()
-
+            try:
+                df.to_sql(name=fName, con=conn, if_exists='replace', index=False)
+                conn.close()
+            except sqlite3.Error as e:
+                messageBox.showerror("toSQL", e)
             refreshTree()
 
         def refreshTree():
@@ -240,9 +247,12 @@ class UI(tk.Tk):
 
             conn = connect("oldData.db")
             tableName = table + "_data"
-            res = conn.execute("SELECT \"Sensor location\" FROM \"{}\";".format(tableName))
-            location = res.fetchone()
-            conn.close()
+            try:
+                res = conn.execute("SELECT \"Sensor location\" FROM \"{}\";".format(tableName))
+                location = res.fetchone()
+                conn.close()
+            except sqlite3.Error as e:
+                messageBox.showerror("getLocation", e)
           
             if "Ankle" in location:
                 return 14
@@ -255,18 +265,19 @@ class UI(tk.Tk):
             conn = connect("oldData.db")
             dataList = []
             tableList = getDataTables()
-            for table in tableList:
-                res = conn.execute("SELECT * FROM \"{}\";".format(table))
-                for data in res.fetchall():
-                    dataList.append(table.replace('_data', ''))
-                    dataList.append(data[0])
-                    dataList.append(data[1])
-                    dataList.append(data[2])
-                    dataList.append(data[3])
-                    dataList.append(data[4])
-            
-        
-            conn.close()
+            try:
+                for table in tableList:
+                    res = conn.execute("SELECT * FROM \"{}\";".format(table))
+                    for data in res.fetchall():
+                        dataList.append(table.replace('_data', ''))
+                        dataList.append(data[0])
+                        dataList.append(data[1])
+                        dataList.append(data[2])
+                        dataList.append(data[3])
+                        dataList.append(data[4])
+                conn.close()
+            except sqlite3.Error as e:
+                messageBox.showerror("getData", e)
             return dataList
 
         def selectedSave(a):
