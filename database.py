@@ -124,6 +124,7 @@ def returnPeaks(item):
         return peaksList
     except sqlite3.Error as e:
         messageBox.showerror("returnPeaks", e)
+        return []
 
 def getTables():
     """
