@@ -6,7 +6,7 @@ from matplotlib.backend_bases import key_press_handler
 from calculations import addCols
 from baselineFinder import getBaseline
 from dataHandler import *
-from database import connect, additionalDataTable, editAdditionalDataTable, deleteAllSelectedData, createPeaks, returnPeaks,  insertPeaks
+from database import connect, additionalDataTable, editAdditionalDataTable, deleteAllSelectedData, createPeaks, returnPeaks,  insertPeaks, getTables
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from datetime import datetime
 from msilib.schema import File
@@ -48,11 +48,11 @@ class UI(tk.Tk):
         super().__init__()
 
         self.title("Gait Analysis")
-        self.geometry("1800x950")
+        self.geometry("1920x1080")
         self.config(bg="white")
         self.df = None  # the dataframe currently loaded into the window
         # Set the resizable property False
-        # self.resizable(False, False)
+        self.resizable(False, False)
         self.ctrlPressed = False
         self.infoStr = ""
         
@@ -150,27 +150,6 @@ class UI(tk.Tk):
             additionalData(0)
             self.df = df
 
-        def getTables():
-            """
-            Method returns all table names from sqlite database, that dont have _data in their name
-
-            :return: list of table names
-
-            """
-
-            tablesList = []
-            tablesFiltered = []
-            conn = connect("oldData.db")
-            res = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table';")
-            for name in res.fetchall():
-                tablesList.append(name[0])
-            conn.close()
-            for table in tablesList:
-                if "_data" not in table:
-                    tablesFiltered.append(table)
-
-            return tablesFiltered
 
         def getDataTables():
             """
@@ -357,7 +336,6 @@ class UI(tk.Tk):
             """
             global selectedItems
 
-            tree.selection_toggle(tree.focus())
             saveID = tree.selection()
             saveText = []
             itemNames = ''
@@ -589,7 +567,7 @@ class UI(tk.Tk):
         frame = tk.Frame(self)
 
         # create a figure
-        figure = plt.Figure(figsize=(14, 10), dpi=100)
+        figure = plt.Figure(figsize=(16, 11), dpi=100)
 
         # create axes
         axes = figure.add_subplot()
@@ -611,20 +589,23 @@ class UI(tk.Tk):
         tree.configure(yscroll=scrollbar.set)
 
         itemsList = getData()
-        for i in range(0, len(itemsList), 6):
+        tablesList = getTables()
+        for i in range(0,len(itemsList),6):
+            isSaved = "No"
+            if (itemsList[i] + "_peaks") in tablesList:
+                isSaved = "Yes"
 
-            tree.insert('', 'end', values=(
-                itemsList[i], itemsList[i+1], itemsList[i+2], itemsList[i+3], itemsList[i+4], itemsList[i+5]))
+            tree.insert('', 'end', values=(itemsList[i], itemsList[i+1], isSaved, itemsList[i+2], itemsList[i+3], itemsList[i+4], itemsList[i+5]))
 
         # Placing the elements
         btn_insertData.place(x=230, y=130, width=120, height=40)
         frame.place(x=450, y=0)
         btn_Peaks.place(x=230, y=220, width=120, height=40)
-        scrollbar.place(x=570, y=650, height=227)
-        tree.place(x=10, y=650)
+        scrollbar.place(x=580, y=800, height=230)
+        tree.place(x=10, y=800, width= 570, height= 230)
 
-        lbl_selection.place(x=5, y=620)
-        lbl_selected.place(x=90, y=620)
+        lbl_selection.place(x=5, y=770)
+        lbl_selected.place(x=93, y=770)
 
         btn_compareData.place(x=230, y=280, width=120, height=40)
         btn_compareGait.place(x=230, y=340, width=120, height=40)
