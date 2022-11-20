@@ -41,7 +41,38 @@ def getPeaks(item,array, y):
     #If no peaks in DB, calculate them
     peaks, _ = find_peaks(array, height=y)
     return peaks
-
+def getShortestGaitCycle(gaitCycles):
+    shortest = gaitCycles[0]
+    idx = 0
+    for i in range(len(gaitCycles)):
+        if(len(gaitCycles[i]) < len(shortest)):
+            shortest = gaitCycles[i]
+            idx = i
+    return shortest, idx
+def getOtherCycleValues(gaitCycles,ignoreIndex,idx):
+    vals = []
+    for i in range(len(gaitCycles)):
+        if i != ignoreIndex:
+            vals.append(gaitCycles[i].iloc[idx]["filtered_acc"])
+    return vals
+def averageGaitCycles(gaitCycles):
+    if(len(gaitCycles) > 0):
+        #average out the filtered_acc
+        shortest,idx = getShortestGaitCycle(gaitCycles)
+        averages = []
+        for i in range(len(shortest)):
+            vals = getOtherCycleValues(gaitCycles,idx,i)
+            currentAcc = shortest.iloc[i]["filtered_acc"]
+            for val in vals:
+                currentAcc += val
+            currentAcc = currentAcc / len(gaitCycles)
+            averages.append(currentAcc)
+            print(currentAcc)
+        shortest["filtered_acc"] = averages
+        # gaitCycles.append(shortest) #uncomment this to test alongide the uneaveraged gait cycles
+        #return gaitCycles
+        return [shortest ] #must return array as the plotting functions expect it
+    return gaitCycles
 
 def getGaitCycles(peaks, df):
     arr = []
@@ -51,9 +82,9 @@ def getGaitCycles(peaks, df):
         start = peaks[i]
         end = peaks[i+2]
         gaitCycle = df[start:end]
-        arr.append(gaitCycle)
-    #add timeStamps to gaitCycles dataframe
+        arr.append(gaitCycle.reset_index())
     arr = normalizeGaitCycles(arr)
+    arr = averageGaitCycles(arr)
     return arr
     
 def normalize(df):
