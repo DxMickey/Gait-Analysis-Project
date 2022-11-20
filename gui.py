@@ -15,7 +15,7 @@ from sqlite3 import DatabaseError
 import tkinter as tk
 import tkinter.messagebox as messageBox
 import sqlite3
-from tkinter import CENTER, W, filedialog, Button, ttk, Label, Menu
+from tkinter import CENTER, W, filedialog, Button, ttk, Label, Menu, WORD
 from turtle import position
 from numpy import pad
 import time
@@ -514,27 +514,45 @@ class UI(tk.Tk):
             
             popup = tk.Toplevel()
             popup.wm_title("Help window")
-            popup.geometry("800x800")
+            popup.geometry("800x900+600+100")
             popup.config(bg="white")
+            popup.resizable(False, False)
 
             path = ".\helpImage.png"
             image1 = Image.open(path)
-            image1 = image1.resize((830, 530))
+            image1 = image1.resize((780, 530))
             image1 = ImageTk.PhotoImage(image1)
+    
+            lbl_panel = tk.Label(
+                popup, 
+                image = image1)
             
-            
-            panel = tk.Label(popup, image = image1)
+            lbl_header = tk.Label(
+            popup,
+            text="Steps:",
+            bg="white",
+            font=("Arial", 14)
+        )
+
+            lbl_example = tk.Label(
+            popup,
+            text="Example of first and last events:",
+            bg="white",
+            font=("Arial", 14)
+        )
             
 
-            textbox = customtkinter.CTkTextbox(popup, fg_color="white", text_color="black", width=700, height=180)
-            textbox.insert("0.0", "1) Select the first gait event by clicking on the correct orange peak tip and choose \"Set first gait event\"\n\n"
-            "2) Select the last gait event by clicking on the correct orange peak tip and choose \"Set last gait event\"\n\n"
+            textbox = customtkinter.CTkTextbox(popup, fg_color="white", text_color="black", wrap=WORD, width=700, height=180)
+            textbox.insert("0.0", "1) Select the first gait event by clicking on the correct peak marker and choose \"Set first gait event\"\n\n"
+            "2) Select the last gait event by clicking on the correct peak marker and choose \"Set last gait event\"\n\n"
             "3) All the peaks from before first and after last gait event will automatically be removed, if there are any peaks that you want to remove manually, select the wanted peak and choose \"Remove peak\"\n\n"
             "4) You are also able to undo and redo actions by pressing CTRL+Z or CTRL+Y\n\n"
             "5) Once selecting peaks is done, click on \"Save peaks\" button to save selected peaks to database or click on \"Reset peaks\" if you want the unmodified peaks back")
             
-            textbox.place(x=20, y=20)
-            panel.place(x=000, y=210)
+            lbl_header.place(x=20, y=10)
+            textbox.place(x=20, y=40)
+            lbl_example.place(x=10, y=250)
+            lbl_panel.place(x=10, y=290)
 
 
 
