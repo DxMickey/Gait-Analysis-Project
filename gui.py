@@ -536,7 +536,7 @@ class UI(tk.Tk):
 
             lbl_example = tk.Label(
             popup,
-            text="Example of first and last events:",
+            text="N.B. Remember that a gait cycle is defined from a Heel-strike to the following\nHeel-strike. Be sure to select a finite number of cycles as shown in figure:",
             bg="white",
             font=("Arial", 14)
         )
@@ -551,7 +551,7 @@ class UI(tk.Tk):
             
             lbl_header.place(x=20, y=10)
             textbox.place(x=20, y=40)
-            lbl_example.place(x=10, y=250)
+            lbl_example.place(x=10, y=235)
             lbl_panel.place(x=10, y=290)
 
 
