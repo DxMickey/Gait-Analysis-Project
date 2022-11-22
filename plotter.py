@@ -1,12 +1,12 @@
 import matplotlib.patches as mpatches
 
 
-def plotAccelerationWithPeaks(axes, acceleration, peaks):
+def plotAccelerationWithPeaks(axes, acceleration, peaks,title):
     axes.clear()
     axes.plot(acceleration)
     axes.plot(acceleration[peaks].to_frame(),
               ".", markersize=20, picker=True)
-
+    axes.set_title(title)
     axes.grid(True, 'both')
     axes.set_xlabel("time [cs]")
     axes.set_ylabel("Acceleration [ms^2]")

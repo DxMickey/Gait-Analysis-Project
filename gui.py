@@ -65,6 +65,7 @@ class UI(tk.Tk):
         self.infoStr = ""
         
         self.peakSelector = peakSelect()
+        self.currentGraphTitle = ""
         global lastButton
         global selectedItems
         global peaks
@@ -84,33 +85,33 @@ class UI(tk.Tk):
             if(not self.ctrlPressed):
                 return
             self.peakSelector.undo()
-            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks(),self.currentGraphTitle)
             figure_canvas.draw()
         def onY(e):
             self.peakSelector.redo()
-            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks(),self.currentGraphTitle)
             figure_canvas.draw()
         def handleSetFirstGE():
             self.peakSelector.setGaitEvent(self.lastPeak,"first")
-            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks(),self.currentGraphTitle)
             figure_canvas.draw()
             
         def handleSetLastGE():
             self.peakSelector.setGaitEvent(self.lastPeak,"last")
-            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks(),self.currentGraphTitle)
             figure_canvas.draw()
             
         def handleDeletePeak():
             self.peakSelector.deletePeak(self.lastPeak)
-            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks(),self.currentGraphTitle)
             figure_canvas.draw()
         def handleUndo():
             self.peakSelector.undo()
-            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks(),self.currentGraphTitle)
             figure_canvas.draw()
         def handleRedo():
             self.peakSelector.redo()
-            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks())
+            plotAccelerationWithPeaks(axes,self.df.filtered_acc,self.peakSelector.getPeaks(),self.currentGraphTitle)
             figure_canvas.draw()
             
         self.bind("<Key>", onKeyPress)
@@ -415,6 +416,7 @@ class UI(tk.Tk):
             df = readFileIntoDF(selectedItems[0])
            
             self.df = df
+           
             sensorLocation = int(lbl_filter_value['text'])
             filtered_acc = getFilteredData(df, sensorLocation)
 
@@ -424,14 +426,15 @@ class UI(tk.Tk):
 
             peaks = getPeaks(
                 selectedItems[0], filtered_acc, getLocation(selectedItems[0]))
+            self.peakSelector.queue = []
+            self.peakSelector.current = 0
             self.peakSelector.setPeaks(peaks)
             self.infoStr = self.peakSelector.info
 
             filtered_acc = df.filtered_acc
-
-            plotAccelerationWithPeaks(axes, filtered_acc, peaks)
-
-            axes.set_title(lbl_selected['text'])
+            self.currentGraphTitle = lbl_selected['text']
+            plotAccelerationWithPeaks(axes, filtered_acc, peaks,self.currentGraphTitle)
+            
             figure_canvas.draw()
             lastButton = "compareData"
             btn_savePeaks.place(x=140, y=550, width=90, height=40)
