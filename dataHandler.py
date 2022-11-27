@@ -86,6 +86,39 @@ def getGaitCycles(peaks, df):
     arr = normalizeGaitCycles(arr)
     arr = averageGaitCycles(arr)
     return arr
+
+
+#Modified 2 base functions to get line data for bland-altman
+
+
+def getLineData(peaks, df):
+    arr = []
+    for i in range(0, len(peaks), 2):
+        if(i + 2 > len(peaks)-1):
+            break
+        start = peaks[i]
+        end = peaks[i+2]
+        gaitCycle = df[start:end]
+        arr.append(gaitCycle.reset_index())
+    arr = normalizeGaitCycles(arr)
+    arr = averageGaitCyclesForLineData(arr)
+    return arr
+
+def averageGaitCyclesForLineData(gaitCycles):
+    if(len(gaitCycles) > 0):
+        #average out the filtered_acc
+        shortest,idx = getShortestGaitCycle(gaitCycles)
+        averages = []
+        for i in range(len(shortest)):
+            vals = getOtherCycleValues(gaitCycles,idx,i)
+            currentAcc = shortest.iloc[i]["filtered_acc"]
+            for val in vals:
+                currentAcc += val
+            currentAcc = currentAcc / len(gaitCycles)
+            averages.append(currentAcc)
+            print(currentAcc)
+
+    return averages
     
 def normalize(df):
     result = df.copy()

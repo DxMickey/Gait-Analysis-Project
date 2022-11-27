@@ -25,6 +25,7 @@ from USB import getUSBDrive
 import customtkinter
 from tktooltip import ToolTip
 from PIL import ImageTk, Image  
+import statsmodels.api as stats
 
 
 from pandas import DataFrame
@@ -479,6 +480,40 @@ class UI(tk.Tk):
             btn_savePeaks.place_forget()
             btn_help.place_forget()
             lbl_modifyPeaks.place_forget()
+        
+        def getAltman():
+       
+            self.df = generateData(selectedItems[0], int(lbl_filter_value['text']))
+            peaksList = returnPeaks(selectedItems[0])
+
+            line1 = getLineData(peaksList, self.df)
+
+            self.df = generateData(selectedItems[1], int(lbl_filter_value['text']))
+            peaksList = returnPeaks(selectedItems[1])
+
+            line2 = getLineData(peaksList, self.df)
+
+            if len(line1) > len(line2):
+                size = len(line2)
+            else:
+                size = len(line1)
+
+            filteredLine1 = []
+            filteredLine2 = []
+
+            for i in range (0, size):
+                filteredLine1.append(line1[i])
+                filteredLine2.append(line2[i])
+
+            arrayLine1 = np.array(filteredLine1)
+            arrayLine2 = np.array(filteredLine2)
+
+            f, ax = plt.subplots(1, figsize = (8,5))
+
+            stats.graphics.mean_diff_plot(arrayLine1, arrayLine2, ax = ax)
+
+            plt.show()
+            
 
         def handlePick(event):
             self.lastPeak = event.ind[0]
@@ -606,6 +641,12 @@ class UI(tk.Tk):
 
         )
 
+        btn_altman = customtkinter.CTkButton(
+            text="Show Bland-Altman",
+            command=getAltman
+
+        )
+
         lbl_filter = tk.Label(
             text="Filter value:",
             bg="white",
@@ -712,6 +753,7 @@ class UI(tk.Tk):
 
         btn_compareData.place(x=230, y=280, width=130, height=40)
         btn_compareGait.place(x=230, y=340, width=130, height=40)
+        btn_altman.place(x=230, y=590, width=130, height=40)
 
         slider_filter.place(x=200, y=425, width=200, height=25)
         lbl_filter.place(x=245, y=400)
