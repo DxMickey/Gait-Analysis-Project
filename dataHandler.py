@@ -12,6 +12,7 @@ import numpy as np
 from sqlalchemy import create_engine
 from sqlite3 import connect
 from database import returnPeaks
+from statistics import stdev
 
 # Input: file path
 # Output: pandas dataframe
@@ -119,6 +120,41 @@ def averageGaitCyclesForLineData(gaitCycles):
             print(currentAcc)
 
     return averages
+
+#Modified base functions to get standard deviation
+
+def getGaitCycleDeviation(peaks, df):
+    arr = []
+    for i in range(0, len(peaks), 2):
+        if(i + 2 > len(peaks)-1):
+            break
+        start = peaks[i]
+        end = peaks[i+2]
+        gaitCycle = df[start:end]
+        arr.append(gaitCycle.reset_index())
+    arr = normalizeGaitCycles(arr)
+    arr = getStandardDeviation(arr)
+    return arr
+
+def getStandardDeviation(gaitCycles):
+    if(len(gaitCycles) > 0):
+        deviation = []
+        #average out the filtered_acc
+        shortest,idx = getShortestGaitCycle(gaitCycles)
+        averages = []
+        for i in range(len(shortest)):
+            vals = getOtherCycleValues(gaitCycles,idx,i)
+            currentAcc = shortest.iloc[i]["filtered_acc"]
+            values = []
+            for val in vals:
+                values.append(val)
+            deviation.append(stdev(values))
+
+
+    
+
+    return deviation
+    
     
 def normalize(df):
     result = df.copy()

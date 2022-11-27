@@ -47,7 +47,8 @@ matplotlib.use("TkAgg")
 
 # Put the name of the sensor ID file here if it changes
 sensorIdFileName = "sensorname.txt"
-colorList = ["blue", "red", "green", "brown", "black"]
+colorList = ["blue", "red", "green", "chocolate", "black"]
+lightColorList = ["lightblue", "salmon", "lightgreen", "brown", "grey"]
 customtkinter.set_appearance_mode("dark")  # Modes: system (default), light, dark
 customtkinter.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
@@ -70,6 +71,8 @@ class UI(tk.Tk):
         global lastButton
         global selectedItems
         global peaks
+        global deviationMode
+        deviationMode = "no"
 
 
         # EVENT LISTENERS
@@ -446,19 +449,9 @@ class UI(tk.Tk):
 
         def compareGaits():
 
-            global filtered_acc, lastButton
+            global filtered_acc, lastButton, deviationMode
             axes.clear()
             axes.set_title(lbl_selected['text'])
-            
-            if(len(selectedItems) == 1):
-                self.df = generateData(selectedItems[0], int(lbl_filter_value['text']))
-                peaksList = self.peakSelector.cutPeaks()
-
-                gaitCycles = getGaitCycles(peaksList, self.df)
-                plotGaitCycles(axes,gaitCycles,colorList[0])
-                plotGaitCycleLabels(axes,selectedItems,colorList,1)
-                
-                figure_canvas.draw()
                 
                 
             count = 0
@@ -468,7 +461,9 @@ class UI(tk.Tk):
                 peaksList = returnPeaks(item)
 
                 gaitCycles = getGaitCycles(peaksList, self.df)
-                plotGaitCycles(axes,gaitCycles,colorList[count])
+                error = getGaitCycleDeviation(peaksList, self.df)
+                plotGaitCycles(axes,gaitCycles,colorList[count], lightColorList[count], error, deviationMode)
+                
                 figure_canvas.draw()
                 count += 1
 
@@ -513,6 +508,20 @@ class UI(tk.Tk):
             stats.graphics.mean_diff_plot(arrayLine1, arrayLine2, ax = ax)
 
             plt.show()
+
+        def changeDeviation():
+            global deviationMode
+            if deviationMode == "yes":
+                deviationMode = "no"
+                btn_enableDeviation.configure(fg_color= "salmon", hover_color= "salmon", text_color="white")
+                
+            else:
+                deviationMode = "yes"
+                btn_enableDeviation.configure(fg_color= "lightgreen", hover_color= "lightgreen", text_color="black")
+
+            
+            compareGaits()
+
             
 
         def handlePick(event):
@@ -641,6 +650,15 @@ class UI(tk.Tk):
 
         )
 
+        btn_enableDeviation = customtkinter.CTkButton(
+            text="Standard Deviaton",
+            command=changeDeviation,
+            fg_color= "salmon",
+            hover_color= "salmon",
+            text_color="white"
+
+        )
+
         btn_altman = customtkinter.CTkButton(
             text="Show Bland-Altman",
             command=getAltman
@@ -752,7 +770,8 @@ class UI(tk.Tk):
         lbl_selected.place(x=93, y=770)
 
         btn_compareData.place(x=230, y=280, width=130, height=40)
-        btn_compareGait.place(x=230, y=340, width=130, height=40)
+        btn_compareGait.place(x=170, y=340, width=130, height=40)
+        btn_enableDeviation.place(x=310, y=340, width=130, height=40)
         btn_altman.place(x=230, y=590, width=130, height=40)
 
         slider_filter.place(x=200, y=425, width=200, height=25)

@@ -12,9 +12,13 @@ def plotAccelerationWithPeaks(axes, acceleration, peaks,title):
     axes.set_ylabel("Acceleration [ms^2]")
 
 
-def plotGaitCycles(axes, gaitCycles, color):
+def plotGaitCycles(axes, gaitCycles, color, lightcolor, error, deviationMode):
     for cycle in gaitCycles:
         axes.plot(cycle.time, cycle.filtered_acc, color)
+        if deviationMode == "yes":
+            yerr0 = cycle.filtered_acc - error
+            yerr1 = cycle.filtered_acc + error
+            axes.fill_between(cycle.time, yerr0, yerr1, color=lightcolor, alpha=0.5)
         axes.grid(True, 'both')
         axes.set_xlabel("time [cs]")
         axes.set_ylabel("Acceleration [ms^2]")
