@@ -412,6 +412,9 @@ class UI(tk.Tk):
             btn_savePeaks.place_forget()
             btn_help.place_forget()
             lbl_modifyPeaks.place_forget()
+            slider_filter.place_forget()
+            lbl_filter_value.place_forget()
+            lbl_filter.place_forget()
 
         def compareData():
 
@@ -441,10 +444,13 @@ class UI(tk.Tk):
             
             figure_canvas.draw()
             lastButton = "compareData"
-            btn_savePeaks.place(x=140, y=550, width=90, height=40)
-            btn_resetPeaks.place(x=250, y=550, width=90, height=40)
-            btn_help.place(x=360, y=550, width=90, height=40)
-            lbl_modifyPeaks.place(x=134, y=500)
+            btn_savePeaks.place(x=140, y=540, width=90, height=40)
+            btn_resetPeaks.place(x=250, y=540, width=90, height=40)
+            btn_help.place(x=360, y=540, width=90, height=40)
+            lbl_modifyPeaks.place(x=134, y=505)
+            slider_filter.place(x=200, y=475, width=200, height=25)
+            lbl_filter.place(x=245, y=450)
+            lbl_filter_value.place(x=329, y=450)
             
 
         def compareGaits():
@@ -482,6 +488,9 @@ class UI(tk.Tk):
             btn_savePeaks.place_forget()
             btn_help.place_forget()
             lbl_modifyPeaks.place_forget()
+            slider_filter.place_forget()
+            lbl_filter_value.place_forget()
+            lbl_filter.place_forget()
         
         def getAltman():
        
@@ -779,11 +788,9 @@ class UI(tk.Tk):
         btn_compareData.place(x=230, y=280, width=130, height=40)
         btn_compareGait.place(x=170, y=340, width=130, height=40)
         btn_enableDeviation.place(x=310, y=340, width=130, height=40)
-        btn_altman.place(x=230, y=590, width=130, height=40)
+        btn_altman.place(x=230, y=400, width=130, height=40)
 
-        slider_filter.place(x=200, y=425, width=200, height=25)
-        lbl_filter.place(x=245, y=400)
-        lbl_filter_value.place(x=329, y=400)
+
 
 
         ToolTip(btn_insertData, msg="Choose and save a data file to database", delay=0.5)
