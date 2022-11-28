@@ -20,7 +20,7 @@ def plotGaitCycles(axes, gaitCycles, color, lightcolor, error, deviationMode):
             yerr1 = cycle.filtered_acc + error
             axes.fill_between(cycle.time, yerr0, yerr1, color=lightcolor, alpha=0.5)
         axes.grid(True, 'both')
-        axes.set_xlabel("time [cs]")
+        axes.set_xlabel("Gait cycle")
         axes.set_ylabel("Acceleration [ms^2]")
 
 

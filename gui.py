@@ -460,9 +460,16 @@ class UI(tk.Tk):
                 self.df = generateData(item, int(lbl_filter_value['text']))
                 peaksList = returnPeaks(item)
 
+                print("DEBUG DEBUG DEBUG")
+                print(deviationMode)
+
                 gaitCycles = getGaitCycles(peaksList, self.df)
-                error = getGaitCycleDeviation(peaksList, self.df)
+                if deviationMode == "yes":
+                    error = getGaitCycleDeviation(peaksList, self.df)
+                else:
+                    error = None
                 plotGaitCycles(axes,gaitCycles,colorList[count], lightColorList[count], error, deviationMode)
+
                 
                 figure_canvas.draw()
                 count += 1
