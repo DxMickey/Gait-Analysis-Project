@@ -20,7 +20,7 @@ from statistics import stdev
 
 def readFileIntoDF(tableName):
     cnx = create_engine('sqlite:///oldData.db').connect()
-    df = pd.read_sql_table(tableName, cnx)
+    df = pd.read_sql_table(str(tableName), cnx)
     df = addCols(df)
     return df
 

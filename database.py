@@ -115,7 +115,7 @@ def returnPeaks(item):
     conn = connect("oldData.db")
     try:
         conn.row_factory = lambda cursor, row: row[0]
-        tableName = item + "_peaks"
+        tableName = str(item) + "_peaks"
         res = conn.execute("SELECT peak FROM \"{}\";".format(tableName))
         
         peaksList = res.fetchall()

@@ -318,7 +318,7 @@ class UI(tk.Tk):
             """
 
             conn = connect("oldData.db")
-            tableName = table + "_data"
+            tableName = str(table) + "_data"
             try:
                 res = conn.execute("SELECT \"Sensor location\" FROM \"{}\";".format(tableName))
                 location = res.fetchone()
