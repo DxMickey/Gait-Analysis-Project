@@ -15,7 +15,7 @@ from sqlite3 import DatabaseError
 import tkinter as tk
 import tkinter.messagebox as messageBox
 import sqlite3
-from tkinter import CENTER, W, filedialog, Button, ttk, Label, Menu, WORD
+from tkinter import CENTER, W, filedialog, Button, ttk, Label, Menu, WORD, messagebox
 from turtle import position
 from numpy import pad
 import time
@@ -493,37 +493,40 @@ class UI(tk.Tk):
             lbl_filter.place_forget()
         
         def getAltman():
-       
-            self.df = generateData(selectedItems[0], int(lbl_filter_value['text']))
-            peaksList = returnPeaks(selectedItems[0])
+            
+            if len(selectedItems) == 2:
+                self.df = generateData(selectedItems[0], int(lbl_filter_value['text']))
+                peaksList = returnPeaks(selectedItems[0])
 
-            line1 = getLineData(peaksList, self.df)
+                line1 = getLineData(peaksList, self.df)
 
-            self.df = generateData(selectedItems[1], int(lbl_filter_value['text']))
-            peaksList = returnPeaks(selectedItems[1])
+                self.df = generateData(selectedItems[1], int(lbl_filter_value['text']))
+                peaksList = returnPeaks(selectedItems[1])
 
-            line2 = getLineData(peaksList, self.df)
+                line2 = getLineData(peaksList, self.df)
 
-            if len(line1) > len(line2):
-                size = len(line2)
+                if len(line1) > len(line2):
+                    size = len(line2)
+                else:
+                    size = len(line1)
+
+                filteredLine1 = []
+                filteredLine2 = []
+
+                for i in range (0, size):
+                    filteredLine1.append(line1[i])
+                    filteredLine2.append(line2[i])
+
+                arrayLine1 = np.array(filteredLine1)
+                arrayLine2 = np.array(filteredLine2)
+
+                f, ax = plt.subplots(1, figsize = (8,5))
+
+                stats.graphics.mean_diff_plot(arrayLine1, arrayLine2, ax = ax)
+
+                plt.show()
             else:
-                size = len(line1)
-
-            filteredLine1 = []
-            filteredLine2 = []
-
-            for i in range (0, size):
-                filteredLine1.append(line1[i])
-                filteredLine2.append(line2[i])
-
-            arrayLine1 = np.array(filteredLine1)
-            arrayLine2 = np.array(filteredLine2)
-
-            f, ax = plt.subplots(1, figsize = (8,5))
-
-            stats.graphics.mean_diff_plot(arrayLine1, arrayLine2, ax = ax)
-
-            plt.show()
+                messagebox.showerror("Bland-Altman Error", "Incorrect amount of files selected, make sure to select only 2 files")
 
         def changeDeviation():
             global deviationMode
