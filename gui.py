@@ -73,6 +73,7 @@ class UI(tk.Tk):
         global peaks
         global deviationMode
         deviationMode = "no"
+        matplotlib.rcParams['toolbar'] = 'None'
 
 
         # EVENT LISTENERS
@@ -458,6 +459,7 @@ class UI(tk.Tk):
             global filtered_acc, lastButton, deviationMode
             axes.clear()
             axes.set_title(lbl_selected['text'])
+            noPeaks = []
                 
                 
             count = 0
@@ -465,6 +467,9 @@ class UI(tk.Tk):
             for item in selectedItems:
                 self.df = generateData(item, int(lbl_filter_value['text']))
                 peaksList = returnPeaks(item)
+
+                if len(peaksList) == 0:
+                    noPeaks.append(item)
 
                 print("DEBUG DEBUG DEBUG")
                 print(deviationMode)
@@ -482,6 +487,9 @@ class UI(tk.Tk):
 
             plotGaitCycleLabels(axes,selectedItems,colorList,count)
             figure_canvas.draw()
+
+            if len(noPeaks) > 0:
+                messagebox.showerror("Error", "No peaks saved yet for file/files: {}".format(noPeaks))
 
             lastButton = "compareGaits"
             btn_resetPeaks.place_forget()
@@ -529,7 +537,7 @@ class UI(tk.Tk):
                 messagebox.showerror("Bland-Altman Error", "Incorrect amount of files selected, make sure to select only 2 files")
 
         def changeDeviation():
-            global deviationMode
+            global deviationMode, lastButton
             if deviationMode == "yes":
                 deviationMode = "no"
                 btn_enableDeviation.configure(fg_color= "salmon", hover_color= "salmon", text_color="white")
@@ -538,8 +546,8 @@ class UI(tk.Tk):
                 deviationMode = "yes"
                 btn_enableDeviation.configure(fg_color= "lightgreen", hover_color= "lightgreen", text_color="black")
 
-            
-            compareGaits()
+            if lastButton == "compareGaits":
+                compareGaits()
 
             
 
@@ -644,7 +652,7 @@ class UI(tk.Tk):
         )
 
         lbl_selected = tk.Label(
-            text="None",
+            text="None(Hold ctrl to select multiple files)",
             bg="white",
             font=("Arial", 15),
             anchor=W
@@ -670,7 +678,7 @@ class UI(tk.Tk):
         )
 
         btn_enableDeviation = customtkinter.CTkButton(
-            text="Standard Deviaton",
+            text="Standard deviaton",
             command=changeDeviation,
             fg_color= "salmon",
             hover_color= "salmon",
@@ -789,15 +797,15 @@ class UI(tk.Tk):
         lbl_selected.place(x=93, y=770)
 
         btn_compareData.place(x=230, y=280, width=130, height=40)
-        btn_compareGait.place(x=170, y=340, width=130, height=40)
-        btn_enableDeviation.place(x=310, y=340, width=130, height=40)
+        btn_compareGait.place(x=160, y=340, width=130, height=40)
+        btn_enableDeviation.place(x=300, y=340, width=130, height=40)
         btn_altman.place(x=230, y=400, width=130, height=40)
 
 
 
 
         ToolTip(btn_insertData, msg="Choose and save a data file to database", delay=0.5)
-        ToolTip(btn_Peaks, msg="Show raw data of selected files", delay=0.5)
+        ToolTip(btn_Peaks, msg="Show raw data of selected file", delay=0.5)
         ToolTip(btn_compareData, msg="Show and modify saved peaks of data files", delay=0.5)
         ToolTip(btn_compareGait, msg="Compare gait cycles of selected data files", delay=0.5)
         ToolTip(btn_savePeaks, msg="Save selected peaks to database", delay=0.5)
