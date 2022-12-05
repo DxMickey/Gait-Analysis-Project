@@ -529,6 +529,7 @@ class UI(tk.Tk):
                 arrayLine2 = np.array(filteredLine2)
 
                 f, ax = plt.subplots(1, figsize = (8,5))
+                ax.set_title("{} - {}".format(selectedItems[0], selectedItems[1]))
 
                 stats.graphics.mean_diff_plot(arrayLine1, arrayLine2, ax = ax)
 
