@@ -194,11 +194,17 @@ class UI(tk.Tk):
         # Inserts raw and calculated data from sensor into database
         # Ideally this function would be in 'database.py', but because of an error it is here for now
         def toSQL(df: DataFrame, tableName):
-            dataBox.destroy()
-            fName = tableName
             conn = connect("oldData.db")
+            cur = conn.cursor()
             try:
-                df.to_sql(name=fName, con=conn, if_exists='replace', index=False)
+                cur.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name=\"{}\";".format(tableName))
+                res = cur.fetchall()
+                if (1 in res[0]):
+                    lblNameError = tk.Label(dataBox, text="That Save name is already used", fg="indian red", bg="lightgray")
+                    lblNameError.place(x=125, y=45)
+                else:
+                    df.to_sql(name=tableName, con=conn, if_exists='fail', index=False)
+                    dataBox.destroy()
                 conn.close()
             except sqlite3.Error as e:
                 messageBox.showerror("toSQL", e)
@@ -288,8 +294,7 @@ class UI(tk.Tk):
                                   [
                                       additionalDataTable(txtSensorID.get("1.0", "end-1c"), txtTableName.get("1.0", "end-1c"), txtSubjectName.get(
                                           "1.0", "end-1c"), sensorLoc.get(), txtSensorCon.get("1.0", "end-1c"), fileDate),
-                                      toSQL(dFrame, txtTableName.get(
-                                          "1.0", "end-1c"))
+                                      toSQL(dFrame, txtTableName.get("1.0", "end-1c"))
                                   ])
                 btn_save.grid(row=8, column=2, pady=25)
             else:

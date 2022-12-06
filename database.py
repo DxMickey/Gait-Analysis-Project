@@ -30,11 +30,16 @@ def additionalDataTable(sensorId, tableName, subject, senLoc, senCon, date):
     conn = connect("oldData.db")
     try:
         cur = conn.cursor()
-        cur.execute("CREATE TABLE IF NOT EXISTS \"{}_data\" (\"Sensor ID\" STRING, Subject STRING, \"Sensor location\" STRING, \"Sensor condition\" STRING, \"Data created\" DATE);".format(tableName))
-        conn.close()
+        cur.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name=\"{}_data\";".format(tableName))
+        res = cur.fetchall()
+        if(0 in res[0]):
+            cur.execute("CREATE TABLE IF NOT EXISTS \"{}_data\" (\"Sensor ID\" STRING, Subject STRING, \"Sensor location\" STRING, \"Sensor condition\" STRING, \"Data created\" DATE);".format(tableName))
+            conn.close()
+            insertIntoAddedTable(sensorId, tableName, subject, senLoc, senCon, date)
+        else:
+            conn.close()
     except sqlite3.Error as e:
         messageBox.showerror("Error", e)
-    insertIntoAddedTable(sensorId, tableName, subject, senLoc, senCon, date)
 
 def insertIntoAddedTable(sensorId, tableName, subject, senLoc, senCon, date):
     conn = connect("oldData.db")
