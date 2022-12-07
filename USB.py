@@ -1,6 +1,4 @@
-# Searches for a usb stick https://mail.python.org/pipermail/python-win32/2006-December/005406.html
-from numpy import empty
-
+# Searches for a USB removable drive https://mail.python.org/pipermail/python-win32/2006-December/005406.html
 
 def locate_usb():
     import win32file
@@ -23,4 +21,4 @@ def getUSBDrive(sensorIdFileName):
                     sensorID = open(USBdrive[i] + sensorIdFileName, "r").read()
                     return sensorID
                 except:
-                    print ("No such file on this USB/Sensor")
+                    print ("No such file on this USB/Sensor: {}".format(sensorIdFileName))

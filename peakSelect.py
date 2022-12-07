@@ -1,4 +1,5 @@
 import numpy as np
+
 class peakSelect:
     def __init__(self) -> None:
         self.initialPeaks = []

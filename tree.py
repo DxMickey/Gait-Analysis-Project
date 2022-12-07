@@ -1,5 +1,5 @@
-# tree
 from tkinter import W,ttk
+
 def getTreeWidget(parent,selectedSave,additionalData):
     tree = ttk.Treeview(parent, columns=("tableName", "sensorId", "peaksSaved", "patientName",
      "sensor_location", "situation", "date"))
