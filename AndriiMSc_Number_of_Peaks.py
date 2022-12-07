@@ -1,6 +1,5 @@
 from sqlite3 import connect
 import pandas as pd
-import os
 
 from calculations import *
 from scipy.signal import find_peaks

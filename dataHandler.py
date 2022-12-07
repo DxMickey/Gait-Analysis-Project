@@ -1,16 +1,7 @@
 import pandas as pd
-import os
-import sys
-from scipy.signal import find_peaks
-from scipy.signal import savgol_filter
-from matplotlib import pyplot as plt
-import matplotlib
+from scipy.signal import find_peaks, savgol_filter
 from calculations import addCols
-from matplotlib.lines import Line2D
-from matplotlib.figure import Figure
-import numpy as np
 from sqlalchemy import create_engine
-from sqlite3 import connect
 from database import returnPeaks
 from statistics import stdev
 

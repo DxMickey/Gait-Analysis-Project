@@ -1,4 +1,5 @@
 from math import sqrt
+
 #Converts the time stamp into seconds
 #Inputs: timeStamp
 def timeStampToSeconds(timeStamp,firstTimeStamp):
