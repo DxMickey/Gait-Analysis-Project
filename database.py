@@ -69,6 +69,7 @@ def editAdditionalDataTable(sensorId, tableName, subject, senLoc, senCon, origin
     except sqlite3.Error as e:
         messageBox.showerror("editAdditionalDataTable", e)
 
+# Deletes the selected table and all other data related to it
 def deleteAllSelectedData(tableName):
     conn = connect("oldData.db")
     try:

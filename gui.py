@@ -24,8 +24,10 @@ from peakSelect import *
 
 matplotlib.use("TkAgg")
 
-# Put the name of the sensor ID file here if it changes
+# Automatically gets sensor name if it is connected by USB
+# Put the name of the file where the sensor ID is here if it changes
 sensorIdFileName = "sensorname.txt"
+
 colorList = ["blue", "red", "green", "chocolate", "black"]
 lightColorList = ["lightblue", "salmon", "lightgreen", "brown", "grey"]
 customtkinter.set_appearance_mode("dark")  # Modes: system (default), light, dark
