@@ -70,6 +70,8 @@ class UI(tk.Tk):
         self.currentGraphTitle = ""
         global lastButton
         global selectedItems
+        global joinItems1
+        global joinItems2
         global peaks
         global deviationMode
         deviationMode = "no"
@@ -374,15 +376,78 @@ class UI(tk.Tk):
             if len(saveText) > 1:
                 count = 1
                 for i in saveText:
-                    itemNames += str(i)
-                    if count < len(saveText):
-                        itemNames += ' & '
+
+                    if len(saveText) > 3:
+                        if count < 3:
+                            itemNames += str(i)
+                            itemNames += ' & '
+                        if count == 3:
+                            itemNames += str(i)
+                            itemNames += '... '
+                    if len(saveText) < 4:
+                        itemNames += str(i)
+                        if count < len(saveText):
+                            itemNames += ' & '
+
+                        
                     count += 1
             else:
                 itemNames = saveText
             selectedItems = saveText
 
             lbl_selected.config(text=itemNames)
+
+        def joinSave1(a):
+            """ 
+            Get name of selected item in tree widget and change lbl_selected text into the name
+
+            """
+            global joinItems1
+
+            saveID = tree1.selection()
+            saveText = []
+            itemNames = ''
+            for i in saveID:
+                saveText.append(tree.item(i)['values'][0])
+
+            if len(saveText) > 1:
+                count = 1
+                for i in saveText:
+                    itemNames += str(i)
+                    if count < len(saveText):
+                        itemNames += ' & '
+                    count += 1
+            else:
+                itemNames = saveText
+            joinItems1 = saveText
+
+
+
+        def joinSave2(a):
+            """ 
+            Get name of selected item in tree widget and change lbl_selected text into the name
+
+            """
+            global joinItems2
+
+            saveID = tree2.selection()
+            saveText = []
+            itemNames = ''
+            for i in saveID:
+                saveText.append(tree.item(i)['values'][0])
+
+            if len(saveText) > 1:
+                count = 1
+                for i in saveText:
+                    itemNames += str(i)
+                    if count < len(saveText):
+                        itemNames += ' & '
+                    count += 1
+            else:
+                itemNames = saveText
+            joinItems2 = saveText
+
+           
 
         def findPeaks():
             """
@@ -470,25 +535,24 @@ class UI(tk.Tk):
             count = 0
 
             for item in selectedItems:
-                self.df = generateData(item, int(lbl_filter_value['text']))
                 peaksList = returnPeaks(item)
-
                 if len(peaksList) == 0:
                     noPeaks.append(item)
+            if len(noPeaks) == 0:
+                for item in selectedItems:
+                    self.df = generateData(item, int(lbl_filter_value['text']))
+                    peaksList = returnPeaks(item)
 
-                print("DEBUG DEBUG DEBUG")
-                print(deviationMode)
+                    gaitCycles = getGaitCycles(peaksList, self.df)
+                    if deviationMode == "yes":
+                        error = getGaitCycleDeviation(peaksList, self.df)
+                    else:
+                        error = None
+                    plotGaitCycles(axes,gaitCycles,colorList[count], lightColorList[count], error, deviationMode)
 
-                gaitCycles = getGaitCycles(peaksList, self.df)
-                if deviationMode == "yes":
-                    error = getGaitCycleDeviation(peaksList, self.df)
-                else:
-                    error = None
-                plotGaitCycles(axes,gaitCycles,colorList[count], lightColorList[count], error, deviationMode)
-
-                
-                figure_canvas.draw()
-                count += 1
+                    
+                    figure_canvas.draw()
+                    count += 1
 
             plotGaitCycleLabels(axes,selectedItems,colorList,count)
             figure_canvas.draw()
@@ -589,6 +653,127 @@ class UI(tk.Tk):
             print(selectedItems[0])
             refreshTree()
             compareData()
+
+        def joinGaits():
+            popup = tk.Toplevel()
+            popup.wm_title("Join gaits")
+            popup.geometry("1300x450+600+100")
+            popup.config(bg="white")
+            popup.resizable(False, False)
+
+            global tree1, tree2
+            
+            tree1 = getTreeWidget(popup,joinSave1,additionalData)
+            # Scrollbar
+            scrollbar1 = ttk.Scrollbar(popup, orient=tk.VERTICAL, command=tree1.yview)
+            tree1.configure(yscroll=scrollbar.set)
+
+            tree2 = getTreeWidget(popup,joinSave2,additionalData)
+            # Scrollbar
+            scrollbar2 = ttk.Scrollbar(popup, orient=tk.VERTICAL, command=tree2.yview)
+            tree2.configure(yscroll=scrollbar.set)
+
+            itemsList = getData()
+            tablesList = getTables()
+            for i in range(0,len(itemsList),6):
+                isSaved = "No"
+                if (itemsList[i] + "_peaks") in tablesList:
+                    isSaved = "Yes"
+
+                tree1.insert('', 'end', values=(itemsList[i], itemsList[i+1], isSaved, itemsList[i+2], itemsList[i+3], itemsList[i+4], itemsList[i+5]))
+                tree2.insert('', 'end', values=(itemsList[i], itemsList[i+1], isSaved, itemsList[i+2], itemsList[i+3], itemsList[i+4], itemsList[i+5]))
+
+            lbl_info = tk.Label(
+            popup,
+            text="Select the gaits you wish to merge and compare",
+            bg="white",
+            font=("Arial", 14)
+        )
+
+            lbl_data1 = tk.Label(
+            popup,
+            text="Select first gaits",
+            bg="white",
+            font=("Arial", 14)
+        )
+
+            lbl_data2 = tk.Label(
+            popup,
+            text="Select second gaits",
+            bg="white",
+            font=("Arial", 14)
+        )
+
+            btn_join = customtkinter.CTkButton(
+            popup,
+            text="Join gaits",
+            command=getJoined
+
+        )
+                
+
+            tree1.place(x=60, y=100)
+            tree2.place(x=670, y=100)
+            btn_join.place(x=580, y=370)
+            lbl_info.place(x=56, y=20)
+            lbl_data1.place(x=56, y=70)
+            lbl_data2.place(x=666, y=70)
+
+        def getJoined():
+
+            axes.clear()
+
+            firstLine = []
+            secondLine = []
+            noPeaks = []
+            if len(joinItems1) > 1 and len(joinItems2) > 1:
+
+                for item in joinItems1:
+                    peaksList = returnPeaks(item)
+                    if len(peaksList) == 0:
+                        noPeaks.append(item)
+                for item in joinItems2:
+                    peaksList = returnPeaks(item)
+                    if len(peaksList) == 0:
+                        noPeaks.append(item)
+
+                if len(noPeaks) == 0:
+                    for item in joinItems1:
+                        self.df = generateData(item, int(lbl_filter_value['text']))
+                        peaksList = returnPeaks(item)
+
+                        tempLine = getLineData(peaksList, self.df)
+                        if len(firstLine) > 0:
+                            firstLine = list(zip(firstLine, tempLine))
+                        else:
+                            firstLine = tempLine
+
+                    firstLine, error1 = averageJoinLine(firstLine)
+
+                    for item in joinItems2:
+                        self.df = generateData(item, int(lbl_filter_value['text']))
+                        peaksList = returnPeaks(item)
+
+                        tempLine = getLineData(peaksList, self.df)
+                        if len(secondLine) > 0:
+                            secondLine = list(zip(firstLine, tempLine))
+                        else:
+                            secondLine = tempLine
+
+                    secondLine, error2 = averageJoinLine(secondLine)
+
+                    plotJoinedGaitCycles(axes,firstLine,colorList[0], lightColorList[0], error1, deviationMode)
+                    figure_canvas.draw()
+                    
+                    plotJoinedGaitCycles(axes,secondLine,colorList[1], lightColorList[1], error2, deviationMode)
+                    figure_canvas.draw()
+                else:
+                    messagebox.showerror("Error", "No peaks saved yet for file/files: {}".format(noPeaks))
+            else:
+                messagebox.showerror("Error", "Not enough data selected, select atleast 2 both from both columns")
+           
+            
+            
         
         def help():
             
@@ -727,6 +912,12 @@ class UI(tk.Tk):
 
         )
 
+        btn_joinGaits = customtkinter.CTkButton(
+            text="Join gaits",
+            command=joinGaits
+
+        )
+
         def slider_changed(val):
             """ 
             Check if any button was pressed before and update lbl_filter to new slider value
@@ -806,6 +997,7 @@ class UI(tk.Tk):
         btn_compareGait.place(x=160, y=340, width=130, height=40)
         btn_enableDeviation.place(x=300, y=340, width=130, height=40)
         btn_altman.place(x=230, y=400, width=130, height=40)
+        btn_joinGaits.place(x=230, y=600, width=130, height=40)
 
 
 

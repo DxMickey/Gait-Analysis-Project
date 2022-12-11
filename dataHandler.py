@@ -57,6 +57,7 @@ def getOtherCycleValues(gaitCycles,ignoreIndex,idx):
             vals.append(gaitCycles[i].iloc[idx]["filtered_acc"])
     return vals
 def averageGaitCycles(gaitCycles):
+    
     if(len(gaitCycles) > 0):
         #average out the filtered_acc
         shortest,idx = getShortestGaitCycle(gaitCycles)
@@ -117,9 +118,25 @@ def averageGaitCyclesForLineData(gaitCycles):
                 currentAcc += val
             currentAcc = currentAcc / len(gaitCycles)
             averages.append(currentAcc)
-            print(currentAcc)
 
     return averages
+
+def averageJoinLine(gaitCycles):
+    
+    if(len(gaitCycles) > 0):
+        averages = []
+        deviation = []
+        for i in gaitCycles:
+            values = []
+            currentAcc = 0
+            for val in i:
+                currentAcc += val
+                values.append(val)
+            currentAcc = currentAcc / len(i)
+            averages.append(currentAcc)
+            deviation.append(stdev(values))
+
+    return averages, deviation
 
 #Modified base functions to get standard deviation
 
@@ -141,7 +158,6 @@ def getStandardDeviation(gaitCycles):
         deviation = []
         #average out the filtered_acc
         shortest,idx = getShortestGaitCycle(gaitCycles)
-        averages = []
         for i in range(len(shortest)):
             vals = getOtherCycleValues(gaitCycles,idx,i)
             currentAcc = shortest.iloc[i]["filtered_acc"]
