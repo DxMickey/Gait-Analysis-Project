@@ -692,14 +692,14 @@ class UI(tk.Tk):
 
             lbl_data1 = tk.Label(
             popup,
-            text="Select first gaits",
+            text="Select first set of gaits",
             bg="white",
             font=("Arial", 14)
         )
 
             lbl_data2 = tk.Label(
             popup,
-            text="Select second gaits",
+            text="Select second set of gaits",
             bg="white",
             font=("Arial", 14)
         )
