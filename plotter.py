@@ -1,6 +1,5 @@
 import matplotlib.patches as mpatches
 
-
 def plotAccelerationWithPeaks(axes, acceleration, peaks,title):
     axes.clear()
     axes.plot(acceleration)
@@ -11,9 +10,7 @@ def plotAccelerationWithPeaks(axes, acceleration, peaks,title):
     axes.set_xlabel("time [cs]")
     axes.set_ylabel("Acceleration [ms^2]")
 
-
 def plotGaitCycles(axes, gaitCycles, color, lightcolor, error, deviationMode):
-    print(gaitCycles)
     for cycle in gaitCycles:
         axes.plot(cycle.time, cycle.filtered_acc, color)
         if deviationMode == "yes":
@@ -30,7 +27,6 @@ def plotJoinedGaitCycles(axes, gaitCycles, color, lightcolor, error, deviationMo
         time.append(1/(len(gaitCycles)-1)*(i))
     axes.plot(time, gaitCycles, color)
     
-
     if deviationMode == "yes":
         count = 0
         yerr0 = []
@@ -43,15 +39,10 @@ def plotJoinedGaitCycles(axes, gaitCycles, color, lightcolor, error, deviationMo
         
         axes.fill_between(time, yerr0, yerr1, color=lightcolor, alpha=0.5)
 
-
-
-
     axes.grid(True, 'both')
     axes.set_xlabel("Gait cycle")
     axes.set_ylabel("Acceleration [ms^2]")
-    
-
-
+  
 def plotGaitCycleLabels(axes, selectedItems, colorList, count):
     # where some data has already been plotted to ax
     handles, labels = axes.get_legend_handles_labels()
@@ -63,7 +54,6 @@ def plotGaitCycleLabels(axes, selectedItems, colorList, count):
 
         axes.legend(handles=handles)
 
-
 def plotRawData(axes, df):
     axes.clear()
     axes.plot(df.averagea,color="blue")
@@ -71,6 +61,7 @@ def plotRawData(axes, df):
     axes.grid(True, 'both')
     axes.set_xlabel("time [cs]")
     axes.set_ylabel("Acceleration [ms^2]")
+
 def highlightPeak(axes, acceleration,peaks,index):
     for i in range(len(peaks)):
         color = None

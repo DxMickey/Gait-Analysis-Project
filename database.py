@@ -123,7 +123,6 @@ def returnPeaks(item):
         
         peaksList = res.fetchall()
         conn.close()
-        print(peaksList)
         return peaksList
     except:
         return []
