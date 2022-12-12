@@ -8,8 +8,6 @@ from statistics import stdev
 
 # Input: file path
 # Output: pandas dataframe
-
-
 def readFileIntoDF(tableName):
     cnx = create_engine('sqlite:///oldData.db').connect()
     df = pd.read_sql_table(str(tableName), cnx)
@@ -34,6 +32,7 @@ def getPeaks(item,array, y):
     #If no peaks in DB, calculate them
     peaks, _ = find_peaks(array, height=y)
     return peaks
+
 def getShortestGaitCycle(gaitCycles):
     shortest = gaitCycles[0]
     idx = 0
@@ -42,12 +41,14 @@ def getShortestGaitCycle(gaitCycles):
             shortest = gaitCycles[i]
             idx = i
     return shortest, idx
+
 def getOtherCycleValues(gaitCycles,ignoreIndex,idx):
     vals = []
     for i in range(len(gaitCycles)):
         if i != ignoreIndex:
             vals.append(gaitCycles[i].iloc[idx]["filtered_acc"])
     return vals
+
 def averageGaitCycles(gaitCycles):
     
     if(len(gaitCycles) > 0):
@@ -61,7 +62,6 @@ def averageGaitCycles(gaitCycles):
                 currentAcc += val
             currentAcc = currentAcc / len(gaitCycles)
             averages.append(currentAcc)
-            print(currentAcc)
         shortest["filtered_acc"] = averages
         # gaitCycles.append(shortest) #uncomment this to test alongide the uneaveraged gait cycles
         #return gaitCycles
@@ -83,7 +83,6 @@ def getGaitCycles(peaks, df):
 
 
 #Modified 2 base functions to get line data for bland-altman
-
 
 def getLineData(peaks, df):
     arr = []

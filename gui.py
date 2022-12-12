@@ -28,8 +28,8 @@ matplotlib.use("TkAgg")
 # Put the name of the file where the sensor ID is here if it changes
 sensorIdFileName = "sensorname.txt"
 
-colorList = ["blue", "red", "green", "chocolate", "black"]
-lightColorList = ["lightblue", "salmon", "lightgreen", "brown", "grey"]
+colorList = ["blue", "red", "green", "chocolate", "black", "beige", "indigo", "gold"]
+lightColorList = ["lightblue", "salmon", "lightgreen", "brown", "grey", "ivory", "purple", "yellow"]
 customtkinter.set_appearance_mode("dark")  # Modes: system (default), light, dark
 customtkinter.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
@@ -53,9 +53,10 @@ class UI(tk.Tk):
         global selectedItems
         global joinItems1
         global joinItems2
-        global peaks
         global deviationMode
-        deviationMode = "no"
+        deviationMode = "yes"
+        
+        #remove toolbar from matplotlib graphs
         matplotlib.rcParams['toolbar'] = 'None'
 
 
@@ -323,6 +324,12 @@ class UI(tk.Tk):
                 return 16
 
         def getData():
+            """
+            Method returns all data from sqlite database,
+
+            :return: list of data
+
+            """
             conn = connect("oldData.db")
             dataList = []
             tableList = getDataTables()
@@ -380,7 +387,7 @@ class UI(tk.Tk):
 
         def joinSave1(a):
             """ 
-            Get name of selected item in tree widget and change lbl_selected text into the name
+            Get name of selected items in tree1 widget
 
             """
             global joinItems1
@@ -406,7 +413,7 @@ class UI(tk.Tk):
 
         def joinSave2(a):
             """ 
-            Get name of selected item in tree widget and change lbl_selected text into the name
+            Get name of selected items in tree2 widget 
 
             """
             global joinItems2
@@ -442,19 +449,13 @@ class UI(tk.Tk):
             if DFIsEmpty(self.df):
                 return
             
-            
             unfiltered_acc = df.averagea
             filtered_acc = getFilteredData(df, int(lbl_filter_value['text']))
 
             # This adds the time parameter
             df.insert(len(df.columns), "filtered_acc", filtered_acc)
             filtered_acc = df.filtered_acc
-
-            # Get peaks in filtered data
-            # peaks = getPeaks(filtered_acc, getLocation(lbl_selected['text']))
-            # filtered_acc = df.filtered_acc
-
-            
+       
             plotRawData(axes,df)
             axes.set_title(lbl_selected['text'])
             
@@ -468,7 +469,12 @@ class UI(tk.Tk):
             lbl_filter_value.place_forget()
             lbl_filter.place_forget()
 
-        def compareData():
+        def filterPeaks():
+
+            """
+            Method for removing peaks
+
+            """
 
             global lastButton, selectedItems
             axes.clear()
@@ -506,6 +512,11 @@ class UI(tk.Tk):
             
 
         def compareGaits():
+            """
+            Method for comparing different data files
+
+            """
+            
 
             global filtered_acc, lastButton, deviationMode
             axes.clear()
@@ -551,6 +562,10 @@ class UI(tk.Tk):
             lbl_filter.place_forget()
         
         def getAltman():
+            """
+            Method for showing Bland-Altman plot
+
+            """
             
             if len(selectedItems) == 2:
                 self.df = generateData(selectedItems[0], int(lbl_filter_value['text']))
@@ -588,6 +603,10 @@ class UI(tk.Tk):
                 messagebox.showerror("Bland-Altman Error", "Incorrect amount of files selected, make sure to select only 2 files")
 
         def changeDeviation():
+            """
+            Method for changing color of btn_EnableDeviation
+
+            """
             global deviationMode, lastButton
             if deviationMode == "yes":
                 deviationMode = "no"
@@ -631,9 +650,8 @@ class UI(tk.Tk):
         def resetPeaks():
             global selectedItems
             deletePeaks(selectedItems[0])
-            print(selectedItems[0])
             refreshTree()
-            compareData()
+            filterPeaks()
 
         def joinGaits():
             popup = tk.Toplevel()
@@ -842,9 +860,9 @@ class UI(tk.Tk):
             anchor=W
         )
 
-        btn_compareData = customtkinter.CTkButton(
+        btn_filterPeaks = customtkinter.CTkButton(
             text="Show filtered peaks",
-            command=compareData
+            command=filterPeaks
 
         )
 
@@ -857,9 +875,9 @@ class UI(tk.Tk):
         btn_enableDeviation = customtkinter.CTkButton(
             text="Standard deviaton",
             command=changeDeviation,
-            fg_color= "salmon",
-            hover_color= "salmon",
-            text_color="white"
+            fg_color= "lightgreen",
+            hover_color= "lightgreen",
+            text_color="black"
 
         )
 
@@ -919,7 +937,7 @@ class UI(tk.Tk):
                 case 'findPeaks':
                     findPeaks()
                 case 'compareData':
-                    compareData()
+                    filterPeaks()
                 case 'compareGaits':
                     compareGaits()
 
@@ -979,7 +997,7 @@ class UI(tk.Tk):
         lbl_selection.place(x=5, y=770)
         lbl_selected.place(x=93, y=770)
 
-        btn_compareData.place(x=230, y=280, width=130, height=40)
+        btn_filterPeaks.place(x=230, y=280, width=130, height=40)
         btn_compareGait.place(x=160, y=340, width=130, height=40)
         btn_enableDeviation.place(x=300, y=340, width=130, height=40)
         btn_altman.place(x=230, y=400, width=130, height=40)
@@ -990,11 +1008,15 @@ class UI(tk.Tk):
 
         ToolTip(btn_insertData, msg="Choose and save a data file to database", delay=0.5)
         ToolTip(btn_Peaks, msg="Show raw data of selected file", delay=0.5)
-        ToolTip(btn_compareData, msg="Show and modify saved peaks of data files", delay=0.5)
+        ToolTip(btn_filterPeaks, msg="Show and modify saved peaks of data files", delay=0.5)
         ToolTip(btn_compareGait, msg="Compare gait cycles of selected data files", delay=0.5)
         ToolTip(btn_savePeaks, msg="Save selected peaks to database", delay=0.5)
         ToolTip(btn_resetPeaks, msg="Delete peaks of current data file from database and reset to unmodified peaks", delay=0.5)
         ToolTip(slider_filter, msg="Change value of window_length used in Savitzky-Golay filter", delay=0.5)
+        ToolTip(tree, msg="Double click to edit file info", delay=0.5)
+        ToolTip(btn_altman, msg="Show Bland-Altman plot for selected 2 files", delay=0.5)
+        ToolTip(btn_enableDeviation, msg="Turn standard deviation on or off", delay=0.5)
+        ToolTip(btn_joinGaits, msg="Join and compare multiple datasets", delay=0.5)
         
 
 
