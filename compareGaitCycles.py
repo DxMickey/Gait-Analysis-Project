@@ -1,16 +1,11 @@
-import tkinter
 
-import numpy as np
-import pandas as pd
+import tkinter
 # Implement the default Matplotlib key bindings.
 from matplotlib.backend_bases import key_press_handler
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
-                                               NavigationToolbar2Tk)
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
-from baselineFinder import getBaseline
-from calculations import addCols
 from dataHandler import getFilteredData, readFileIntoDF, getPeaks
-import sys
+
 
 
 """

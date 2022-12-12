@@ -1,52 +1,33 @@
+import matplotlib
+import os
+import matplotlib.pyplot as plt
 from plotter import *
-from matplotlib.patches import Patch
-import matplotlib.patches as mpatches
-import numpy as np
 from matplotlib.backend_bases import key_press_handler
-from calculations import addCols
-from baselineFinder import getBaseline
 from dataHandler import *
 from database import connect, additionalDataTable, editAdditionalDataTable, deleteAllSelectedData, createPeaks, returnPeaks,  insertPeaks, getTables, deletePeaks
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from datetime import datetime
-from msilib.schema import File
-from posixpath import split
-from sqlite3 import DatabaseError
 import tkinter as tk
 import tkinter.messagebox as messageBox
-import sqlite3
-from tkinter import CENTER, W, filedialog, Button, ttk, Label, Menu, WORD, messagebox
-from turtle import position
-from numpy import pad
-import time
-import math
-import win32file
-from USB import getUSBDrive
+from tkinter import W, filedialog, Button, ttk, Menu, WORD, messagebox
 import customtkinter
+import sqlite3
+import math
+from USB import getUSBDrive
 from tktooltip import ToolTip
 from PIL import ImageTk, Image  
 import statsmodels.api as stats
-
-
 from pandas import DataFrame
-from pyparsing import col
-# import AndriiMSc_Number_of_Peaks as peaks
-import os
-import pandas as pd
-
-import matplotlib
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-
 from errors import *
-
 from tree import *
 from peakSelect import *
+
 matplotlib.use("TkAgg")
 
-
-# Put the name of the sensor ID file here if it changes
+# Automatically gets sensor name if it is connected by USB
+# Put the name of the file where the sensor ID is here if it changes
 sensorIdFileName = "sensorname.txt"
+
 colorList = ["blue", "red", "green", "chocolate", "black"]
 lightColorList = ["lightblue", "salmon", "lightgreen", "brown", "grey"]
 customtkinter.set_appearance_mode("dark")  # Modes: system (default), light, dark

@@ -1,7 +1,5 @@
-from datetime import datetime
+
 import sqlite3
-import os
-import datetime
 import tkinter.messagebox as messageBox
 
 def database(name):
