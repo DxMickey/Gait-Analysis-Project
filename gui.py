@@ -728,6 +728,7 @@ class UI(tk.Tk):
             secondLine = []
             noPeaks = []
             items = ["First set of gaits", "Second set of gaits"]
+            count = 0
             if len(joinItems1) > 1 and len(joinItems2) > 1:
 
                 for item in joinItems1:
@@ -743,12 +744,17 @@ class UI(tk.Tk):
                     for item in joinItems1:
                         self.df = generateData(item, int(lbl_filter_value['text']))
                         peaksList = returnPeaks(item)
+                        firstTemp = firstLine
+                        firstLine = []
 
                         tempLine = getLineData(peaksList, self.df)
-                        if len(firstLine) > 0:
-                            firstLine = list(zip(firstLine, tempLine))
-                        else:
+                        if count > 1:
+                            firstLine = [t + (word,) for t, word in zip(firstTemp, tempLine)]
+                        if count == 1:
+                            firstLine = list(zip(firstTemp, tempLine))
+                        if count == 0:
                             firstLine = tempLine
+                        count += 1
 
                     firstLine, error1 = averageJoinLine(firstLine)
 

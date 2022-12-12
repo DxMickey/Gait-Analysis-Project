@@ -113,6 +113,7 @@ def averageGaitCyclesForLineData(gaitCycles):
     return averages
 
 def averageJoinLine(gaitCycles):
+
     
     if(len(gaitCycles) > 0):
         averages = []
