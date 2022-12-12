@@ -666,12 +666,12 @@ class UI(tk.Tk):
             tree1 = getTreeWidget(popup,joinSave1,additionalData)
             # Scrollbar
             scrollbar1 = ttk.Scrollbar(popup, orient=tk.VERTICAL, command=tree1.yview)
-            tree1.configure(yscroll=scrollbar.set)
+            tree1.configure(yscroll=scrollbar1.set)
 
             tree2 = getTreeWidget(popup,joinSave2,additionalData)
             # Scrollbar
             scrollbar2 = ttk.Scrollbar(popup, orient=tk.VERTICAL, command=tree2.yview)
-            tree2.configure(yscroll=scrollbar.set)
+            tree2.configure(yscroll=scrollbar2.set)
 
             itemsList = getData()
             tablesList = getTables()
@@ -718,6 +718,8 @@ class UI(tk.Tk):
             lbl_info.place(x=56, y=20)
             lbl_data1.place(x=56, y=70)
             lbl_data2.place(x=666, y=70)
+            scrollbar1.place(x=620, y=100, height=227)
+            scrollbar2.place(x=1230, y=100, height=227)
 
         def getJoined():
 
