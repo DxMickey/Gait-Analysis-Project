@@ -728,6 +728,7 @@ class UI(tk.Tk):
             firstLine = []
             secondLine = []
             noPeaks = []
+            items = ["First set of gaits", "Second set of gaits"]
             if len(joinItems1) > 1 and len(joinItems2) > 1:
 
                 for item in joinItems1:
@@ -768,6 +769,8 @@ class UI(tk.Tk):
                     figure_canvas.draw()
                     
                     plotJoinedGaitCycles(axes,secondLine,colorList[1], lightColorList[1], error2, deviationMode)
+
+                    plotGaitCycleLabels(axes, ["First set of gaits", "Second set of gaits"], colorList, 2)
                     figure_canvas.draw()
                 else:
                     messagebox.showerror("Error", "No peaks saved yet for file/files: {}".format(noPeaks))
