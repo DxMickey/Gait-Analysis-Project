@@ -34,6 +34,8 @@ customtkinter.set_appearance_mode("dark")  # Modes: system (default), light, dar
 customtkinter.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
 
+
+
 class UI(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -46,6 +48,7 @@ class UI(tk.Tk):
         self.resizable(False, False)
         self.ctrlPressed = False
         self.infoStr = ""
+        self.state("zoomed")
         
         self.peakSelector = peakSelect()
         self.currentGraphTitle = ""
@@ -139,7 +142,7 @@ class UI(tk.Tk):
 
             global filesToSave
 
-            tk.messagebox.showinfo("Gait analysis",  "Choose file to save")
+            tk.messagebox.showinfo("Gait analysis",  "Choose file/files to save")
             filesToSave = filedialog.askopenfilenames()
             print(filesToSave)       
            
@@ -692,7 +695,7 @@ class UI(tk.Tk):
         def joinGaits():
             popup = tk.Toplevel()
             popup.wm_title("Join gaits")
-            popup.geometry("1300x450+600+100")
+            popup.geometry("1300x450+300+250")
             popup.config(bg="white")
             popup.resizable(False, False)
 
