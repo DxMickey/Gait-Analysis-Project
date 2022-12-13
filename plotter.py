@@ -26,7 +26,7 @@ def plotJoinedGaitCycles(axes, gaitCycles, color, lightcolor, error, deviationMo
     for i in range(len(gaitCycles)):
         time.append(1/(len(gaitCycles)-1)*(i))
     axes.plot(time, gaitCycles, color)
-    
+
     if deviationMode == "yes":
         count = 0
         yerr0 = []

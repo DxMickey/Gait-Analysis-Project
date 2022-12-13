@@ -618,6 +618,8 @@ class UI(tk.Tk):
 
             if lastButton == "compareGaits":
                 compareGaits()
+            if lastButton == "getJoined":
+                getJoined()
 
             
 
@@ -722,12 +724,16 @@ class UI(tk.Tk):
 
         def getJoined():
 
+            global lastButton, deviationMode
+            
+            
+
             axes.clear()
 
             firstLine = []
             secondLine = []
             noPeaks = []
-            items = ["First set of gaits", "Second set of gaits"]
+            
             count = 0
             if len(joinItems1) > 1 and len(joinItems2) > 1:
 
@@ -779,8 +785,13 @@ class UI(tk.Tk):
                     figure_canvas.draw()
                 else:
                     messagebox.showerror("Error", "No peaks saved yet for file/files: {}".format(noPeaks))
+                
+                lastButton = "getJoined"
+                
             else:
                 messagebox.showerror("Error", "Not enough data selected, select atleast 2 both from both columns")
+            
+
            
             
             
