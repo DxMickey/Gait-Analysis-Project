@@ -54,6 +54,7 @@ class UI(tk.Tk):
         global joinItems1
         global joinItems2
         global deviationMode
+        global filesToSave
         deviationMode = "yes"
         
         #remove toolbar from matplotlib graphs
@@ -107,6 +108,8 @@ class UI(tk.Tk):
         self.bind("<KeyRelease>", onKeyRelease)
         self.bind("<z>",onZ)
         self.bind("<y>",onY)
+
+        self.bind('<Delete>',lambda event:deleteSaves())
         
         self.lastPeak = -1
         
@@ -134,17 +137,23 @@ class UI(tk.Tk):
 
             """
 
-            tk.messagebox.showinfo("Gait analysis",  "Choose file to save")
-            global dFrame, fileDate
-            file = filedialog.askopenfilename()
-            df = pd.read_csv(file)
-            df.columns = ['stamp', 'battery', 'pressure', 'temperature',
-                          'ax', 'ay', 'az', 'gx', 'gy', 'gz', 'mx', 'my', 'mz']
+            global filesToSave
 
-            dFrame = df
-            fileDate = dateAndTime(file)
-            additionalData(0)
-            self.df = df
+            tk.messagebox.showinfo("Gait analysis",  "Choose file to save")
+            filesToSave = filedialog.askopenfilenames()
+            print(filesToSave)       
+           
+            if len(filesToSave) > 0:
+                additionalData(0)
+
+        def deleteSaves():
+            
+            for item in selectedItems:
+                deleteAllSelectedData(item)
+                                        
+            refreshTree()
+
+            
 
 
         def getDataTables():
@@ -189,7 +198,7 @@ class UI(tk.Tk):
                     lblNameError.place(x=125, y=45)
                 else:
                     df.to_sql(name=tableName, con=conn, if_exists='fail', index=False)
-                    dataBox.destroy()
+                    
                 conn.close()
             except sqlite3.Error as e:
                 messageBox.showerror("toSQL", e)
@@ -276,11 +285,10 @@ class UI(tk.Tk):
 
             if(save == 1):
                 btn_save = Button(dataBox, text="SAVE", command=lambda:
-                                  [
-                                      additionalDataTable(txtSensorID.get("1.0", "end-1c"), txtTableName.get("1.0", "end-1c"), txtSubjectName.get(
-                                          "1.0", "end-1c"), sensorLoc.get(), txtSensorCon.get("1.0", "end-1c"), fileDate),
-                                      toSQL(dFrame, txtTableName.get("1.0", "end-1c"))
-                                  ])
+                                [  saveFiles(txtSensorID.get("1.0", "end-1c"), txtTableName.get("1.0", "end-1c"), txtSubjectName.get(
+                                          "1.0", "end-1c"), sensorLoc.get(), txtSensorCon.get("1.0", "end-1c"))
+
+                                ])
                 btn_save.grid(row=8, column=2, pady=25)
             else:
                 btn_edit = Button(dataBox, text="EDIT", command=lambda:
@@ -298,6 +306,32 @@ class UI(tk.Tk):
                                     ])
                 btn_delete.grid(row=8, column=2, pady=25)
                 btn_edit.grid(row=8, column=1, pady=25)
+
+        def saveFiles(sensorID, tableName, subjectName, sensorLoc, sensorCon):
+            global dFrame, fileDate, filesToSave
+            
+            count = 1
+            
+            for file in filesToSave:
+                print("saving")
+                print(count)
+                df = pd.read_csv(file)
+                df.columns = ['stamp', 'battery', 'pressure', 'temperature',
+                            'ax', 'ay', 'az', 'gx', 'gy', 'gz', 'mx', 'my', 'mz']
+
+                dFrame = df
+                fileDate = dateAndTime(file)
+
+                if (count == 1):
+                    table = tableName
+                else:
+                    table = tableName + str(count)
+
+                additionalDataTable(sensorID, table, subjectName, sensorLoc, sensorCon, fileDate),
+                toSQL(dFrame, table)
+
+                count += 1
+            dataBox.destroy()
 
         def getLocation(table):
             """
