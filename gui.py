@@ -759,6 +759,61 @@ class UI(tk.Tk):
             scrollbar1.place(x=620, y=100, height=227)
             scrollbar2.place(x=1230, y=100, height=227)
 
+        def autoPeaks():
+            global lastButton, selectedItems
+            maxDifference = 0
+            axes.clear()
+            df = readFileIntoDF(selectedItems[0])
+            self.df = df
+           
+            sensorLocation = int(lbl_filter_value['text'])
+            filtered_acc = getFilteredData(df, sensorLocation)
+
+            # This adds the time parameter
+            df.insert(len(df.columns), "filtered_acc", filtered_acc)
+            filtered_acc = df.filtered_acc
+
+            peaks = getPeaks(
+                selectedItems[0], filtered_acc, getLocation(selectedItems[0]))
+            self.peakSelector.queue = []
+            self.peakSelector.current = 0
+            self.peakSelector.setPeaks(peaks)
+            self.infoStr = self.peakSelector.info
+
+            filtered_acc = df.filtered_acc
+            self.currentGraphTitle = lbl_selected['text']
+
+            for i in range(1, len(peaks)):
+                difference = abs(filtered_acc[peaks[i]] - filtered_acc[peaks[i - 1]])
+                if difference > maxDifference:
+                    maxDifference = difference
+                
+            
+            autoPeaks = []
+
+            averageValue = 0
+
+            for item in peaks:
+                averageValue += filtered_acc[item]
+            averageValue = (averageValue / len(peaks)) * 0.75
+            print(averageValue)
+
+            for i in range(1, len(peaks)):
+                minDifference = maxDifference -10
+                if filtered_acc[peaks[i - 1]] - filtered_acc[peaks[i]] > minDifference and filtered_acc[peaks[i + 1]] - filtered_acc[peaks[i]] > minDifference and filtered_acc[peaks[i]] > averageValue:
+                    autoPeaks.append(peaks[i])
+                    autoPeaks.append(peaks[i - 1])
+                    autoPeaks.append(peaks[i + 1])
+
+
+
+            plotAccelerationWithPeaks(axes, filtered_acc, autoPeaks,self.currentGraphTitle)
+
+            figure_canvas.draw()
+
+     
+            
+
         def getJoined():
 
             global lastButton, deviationMode
@@ -976,6 +1031,12 @@ class UI(tk.Tk):
 
         )
 
+        btn_autoGait = customtkinter.CTkButton(
+            text="Find automatically",
+            command=autoPeaks
+
+        )
+
         def slider_changed(val):
             """ 
             Check if any button was pressed before and update lbl_filter to new slider value
@@ -1056,6 +1117,7 @@ class UI(tk.Tk):
         btn_enableDeviation.place(x=300, y=340, width=130, height=40)
         btn_altman.place(x=230, y=400, width=130, height=40)
         btn_joinGaits.place(x=230, y=600, width=130, height=40)
+        btn_autoGait.place(x=230, y=700, width=130, height=40)
 
 
 
