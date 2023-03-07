@@ -761,12 +761,48 @@ class UI(tk.Tk):
 
         def autoPeaks():
             global lastButton, selectedItems
-            maxDifference = 0
+    
             axes.clear()
             df = readFileIntoDF(selectedItems[0])
             self.df = df
            
             sensorLocation = int(lbl_filter_value['text'])
+
+            if (filterVar1.get() == 1):
+                print("DEBUUUUUUUUUG")
+                bestFilter = 0
+                highestAverage = 0
+                for i in range(35, 55):
+                    averageDifference = 0
+                    tempdf = readFileIntoDF(selectedItems[0])
+                    filtered_acceleration = getFilteredData(tempdf, i)
+                    tempdf.insert(len(tempdf.columns), "filtered_acc", filtered_acceleration)
+                    filtered_acceleration = tempdf.filtered_acc
+
+                    temppeaks = getPeaks(
+                    selectedItems[0], filtered_acceleration, getLocation(selectedItems[0]))
+                    self.peakSelector.queue = []
+                    self.peakSelector.current = 0
+                    self.peakSelector.setPeaks(temppeaks)
+                    self.infoStr = self.peakSelector.info
+
+                    filtered_acceleration = tempdf.filtered_acc
+
+                    for j in range(1, len(temppeaks)):
+                        averageDifference += abs(filtered_acceleration[temppeaks[j]] - filtered_acceleration[temppeaks[j - 1]])
+                    averageDifference = averageDifference / len(temppeaks)
+
+                    if averageDifference > highestAverage:
+                        highestAverage = averageDifference
+                        bestFilter = i
+                sensorLocation = bestFilter
+                print(sensorLocation)
+
+
+              
+
+
+
             filtered_acc = getFilteredData(df, sensorLocation)
 
             # This adds the time parameter
@@ -783,22 +819,29 @@ class UI(tk.Tk):
             filtered_acc = df.filtered_acc
             self.currentGraphTitle = lbl_selected['text']
 
+            maxDifference = 0    
+            autoPeaks = []
+            averageValue = 0
+
             for i in range(1, len(peaks)):
                 difference = abs(filtered_acc[peaks[i]] - filtered_acc[peaks[i - 1]])
                 if difference > maxDifference:
                     maxDifference = difference
                 
-            
-            autoPeaks = []
-
-            averageValue = 0
-
             for item in peaks:
                 averageValue += filtered_acc[item]
-            averageValue = (averageValue / len(peaks)) * 0.80
+            averageValue = (averageValue / len(peaks)) * 0.9
             print(averageValue)
+            print("maxval")
+            print(maxDifference)
 
-            for i in range(1, len(peaks) - 2):
+            peaksHolder = peaks
+            peaks = []
+            for item in peaksHolder:
+                if filtered_acc[item] > averageValue:
+                    peaks.append(item)
+
+            for i in range(1, len(peaks) - 1):
                 minDifference = maxDifference * 0.20
                 if filtered_acc[peaks[i - 1]] - filtered_acc[peaks[i]] > minDifference and filtered_acc[peaks[i + 1]] - filtered_acc[peaks[i]] > minDifference and filtered_acc[peaks[i]] > averageValue:
                     autoPeaks.append(peaks[i])
@@ -1066,6 +1109,9 @@ class UI(tk.Tk):
             variable=current_value
         )
 
+        filterVar1 = tk.IntVar()
+        filterChangeCbox = tk.Checkbutton(text='Find best filter value',variable=filterVar1, onvalue=1, offvalue=0)
+
         slider_filter.set(39)
 
         frame = tk.Frame(self)
@@ -1118,6 +1164,7 @@ class UI(tk.Tk):
         btn_altman.place(x=230, y=400, width=130, height=40)
         btn_joinGaits.place(x=230, y=600, width=130, height=40)
         btn_autoGait.place(x=230, y=700, width=130, height=40)
+        filterChangeCbox.place(x=80, y=700, width=130, height=40)
 
 
 
