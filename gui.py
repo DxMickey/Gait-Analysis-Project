@@ -795,11 +795,11 @@ class UI(tk.Tk):
 
             for item in peaks:
                 averageValue += filtered_acc[item]
-            averageValue = (averageValue / len(peaks)) * 0.75
+            averageValue = (averageValue / len(peaks)) * 0.80
             print(averageValue)
 
-            for i in range(1, len(peaks)):
-                minDifference = maxDifference -10
+            for i in range(1, len(peaks) - 2):
+                minDifference = maxDifference * 0.20
                 if filtered_acc[peaks[i - 1]] - filtered_acc[peaks[i]] > minDifference and filtered_acc[peaks[i + 1]] - filtered_acc[peaks[i]] > minDifference and filtered_acc[peaks[i]] > averageValue:
                     autoPeaks.append(peaks[i])
                     autoPeaks.append(peaks[i - 1])
