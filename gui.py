@@ -846,8 +846,9 @@ class UI(tk.Tk):
                     if previousPeak is None:
                         previousPeak = item
                     else:
-                        if abs(item - previousPeak < 8):
-                            previousPeak = item
+                        if abs(item - previousPeak) < 8:
+                            if filtered_acc[item] > filtered_acc[previousPeak]:
+                                previousPeak = item           
                         else:
                             peaks.append(previousPeak)
                             previousPeak = item
