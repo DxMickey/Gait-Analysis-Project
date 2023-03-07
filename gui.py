@@ -830,16 +830,31 @@ class UI(tk.Tk):
                 
             for item in peaks:
                 averageValue += filtered_acc[item]
-            averageValue = (averageValue / len(peaks)) * 0.9
+            averageValue = (averageValue / len(peaks)) * 0.84
             print(averageValue)
             print("maxval")
             print(maxDifference)
 
             peaksHolder = peaks
             peaks = []
+            previousPeak = None
+            count = len(peaksHolder)
             for item in peaksHolder:
+                count -= 1
+                
                 if filtered_acc[item] > averageValue:
-                    peaks.append(item)
+                    if previousPeak is None:
+                        previousPeak = item
+                    else:
+                        if abs(item - previousPeak < 8):
+                            previousPeak = item
+                        else:
+                            peaks.append(previousPeak)
+                            previousPeak = item
+                if count == 0 and peaks[len(peaks) - 1] != previousPeak:
+                    peaks.append(previousPeak)
+            print(peaks)
+
 
             for i in range(1, len(peaks) - 1):
                 minDifference = maxDifference * 0.20
