@@ -150,11 +150,13 @@ class UI(tk.Tk):
                 additionalData(0)
 
         def deleteSaves():
+
+            if tk.messagebox.askyesno("Confirmation", "Are you sure that you want to delete currently selected files?"):
             
-            for item in selectedItems:
-                deleteAllSelectedData(item)
-                                        
-            refreshTree()
+                for item in selectedItems:
+                    deleteAllSelectedData(item)
+                                            
+                refreshTree()
 
             
 
