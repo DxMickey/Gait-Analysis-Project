@@ -1,5 +1,6 @@
 import matplotlib
 import os
+from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
 from plotter import *
 from matplotlib.backend_bases import key_press_handler
@@ -21,6 +22,8 @@ from pandas import DataFrame
 from errors import *
 from tree import *
 from peakSelect import *
+import stumpy
+
 
 matplotlib.use("TkAgg")
 
@@ -548,6 +551,46 @@ class UI(tk.Tk):
             slider_filter.place(x=200, y=475, width=200, height=25)
             lbl_filter.place(x=245, y=450)
             lbl_filter_value.place(x=329, y=450)
+
+        def matrixPeaks():
+
+            """
+            Method for finding peaks and cycles using matrix profiling
+
+            """
+
+            global lastButton, selectedItems
+            axes.clear()
+            df = readFileIntoDF(selectedItems[0])
+            self.df = df
+           
+            sensorLocation = int(lbl_filter_value['text'])
+            filtered_acc = getFilteredData(df, sensorLocation)
+
+            
+      
+
+            # This adds the time parameter
+            df.insert(len(df.columns), "filtered_acc", filtered_acc)
+            filtered_acc = df.filtered_acc
+
+            m = 1000
+            mp = stumpy.stump(filtered_acc, m)
+            
+            k = 10  # number of motifs to highlight
+            motif_indices = np.argsort(mp[:, 0])[:k]
+
+            axes.plot(filtered_acc)
+
+            for idx in motif_indices:
+                axes.axvspan(filtered_acc[idx], filtered_acc[idx+m], color='red', alpha=0.5, label=f'Motif {idx}')
+
+  
+            
+            
+            figure_canvas.draw()
+            lastButton = "compareData"
+
             
 
         def compareGaits():
@@ -773,7 +816,7 @@ class UI(tk.Tk):
             if (filterVar1.get() == 1):
                 print("DEBUUUUUUUUUG")
                 bestFilter = 0
-                highestAverage = 0
+                highestPeaksAmount = 0
                 for i in range(35, 55):
                     averageDifference = 0
                     tempdf = readFileIntoDF(selectedItems[0])
@@ -794,9 +837,46 @@ class UI(tk.Tk):
                         averageDifference += abs(filtered_acceleration[temppeaks[j]] - filtered_acceleration[temppeaks[j - 1]])
                     averageDifference = averageDifference / len(temppeaks)
 
-                    if averageDifference > highestAverage:
-                        highestAverage = averageDifference
+                    maxDifference = 0    
+                    autoPeaks = []
+                    averageValue = 0
+
+                    peaksHolder = temppeaks
+                    temppeaks = []
+                    previousPeak = None
+                    count = len(peaksHolder)
+                    for item in peaksHolder:
+                        count -= 1
+                        
+                        if filtered_acceleration[item] > averageValue:
+                            if previousPeak is None:
+                                previousPeak = item
+                            else:
+                                if abs(item - previousPeak) < 8:
+                                    if filtered_acceleration[item] > filtered_acceleration[previousPeak]:
+                                        previousPeak = item           
+                                else:
+                                    temppeaks.append(previousPeak)
+                                    previousPeak = item
+                        if count == 0 and temppeaks[len(temppeaks) - 1] != previousPeak:
+                            temppeaks.append(previousPeak)
+                  
+
+
+                    for i in range(1, len(temppeaks) - 1):
+                        minDifference = maxDifference * 0.20
+                        if filtered_acceleration[temppeaks[i - 1]] - filtered_acceleration[temppeaks[i]] > minDifference and filtered_acceleration[temppeaks[i + 1]] - filtered_acceleration[temppeaks[i]] > minDifference and filtered_acceleration[temppeaks[i]] > averageValue:
+                            autoPeaks.append(temppeaks[i])
+                            autoPeaks.append(temppeaks[i - 1])
+                            autoPeaks.append(temppeaks[i + 1])
+
+
+                    if len(autoPeaks) > highestPeaksAmount:
+                        highestPeaksAmount = len(autoPeaks)
                         bestFilter = i
+
+                   
+                    
                 sensorLocation = bestFilter
                 print(sensorLocation)
 
@@ -865,6 +945,7 @@ class UI(tk.Tk):
                     autoPeaks.append(peaks[i])
                     autoPeaks.append(peaks[i - 1])
                     autoPeaks.append(peaks[i + 1])
+
 
 
 
@@ -998,6 +1079,7 @@ class UI(tk.Tk):
             popup.mainloop()
 
         btn_insertData = customtkinter.CTkButton(
+            self,
             text="Save new data",
 
             command=lambda: insertData(0)
@@ -1005,6 +1087,7 @@ class UI(tk.Tk):
         )
 
         btn_Peaks = customtkinter.CTkButton(
+            
             text="Show raw data",
             command=findPeaks
 
@@ -1098,6 +1181,12 @@ class UI(tk.Tk):
 
         )
 
+        btn_matrixPeaks = customtkinter.CTkButton(
+            text="Use matrix profiling",
+            command=matrixPeaks
+
+        )
+
         def slider_changed(val):
             """ 
             Check if any button was pressed before and update lbl_filter to new slider value
@@ -1182,6 +1271,7 @@ class UI(tk.Tk):
         btn_altman.place(x=230, y=400, width=130, height=40)
         btn_joinGaits.place(x=230, y=600, width=130, height=40)
         btn_autoGait.place(x=230, y=700, width=130, height=40)
+        btn_matrixPeaks.place(x=230, y=650, width=130, height=40)
         filterChangeCbox.place(x=80, y=700, width=130, height=40)
 
 
