@@ -23,6 +23,7 @@ from errors import *
 from tree import *
 from peakSelect import *
 import stumpy
+from automation import *
 
 
 matplotlib.use("TkAgg")
@@ -556,38 +557,37 @@ class UI(tk.Tk):
 
             """
             Method for finding peaks and cycles using matrix profiling
-
             """
 
             global lastButton, selectedItems
             axes.clear()
             df = readFileIntoDF(selectedItems[0])
             self.df = df
-           
+
             sensorLocation = int(lbl_filter_value['text'])
             filtered_acc = getFilteredData(df, sensorLocation)
-
-            
-      
 
             # This adds the time parameter
             df.insert(len(df.columns), "filtered_acc", filtered_acc)
             filtered_acc = df.filtered_acc
 
-            m = 1000
+            m = 100
             mp = stumpy.stump(filtered_acc, m)
-            
-            k = 10  # number of motifs to highlight
-            motif_indices = np.argsort(mp[:, 0])[:k]
 
+            motif_idx = np.argsort(mp[:, 0])[0]
+            nearest_neighbor_idx = mp[motif_idx, 1]
+
+            
             axes.plot(filtered_acc)
 
-            for idx in motif_indices:
-                axes.axvspan(filtered_acc[idx], filtered_acc[idx+m], color='red', alpha=0.5, label=f'Motif {idx}')
+            
+            rect = Rectangle((motif_idx, 0), m, 40, facecolor='yellow')
+            axes.add_patch(rect)
 
-  
-            
-            
+            rect = Rectangle((nearest_neighbor_idx, 0), m, 40, facecolor='lightgrey')
+            axes.add_patch(rect)
+
+            axes.grid(True, 'both')
             figure_canvas.draw()
             lastButton = "compareData"
 
@@ -806,153 +806,36 @@ class UI(tk.Tk):
 
         def autoPeaks():
             global lastButton, selectedItems
-    
             axes.clear()
+            
             df = readFileIntoDF(selectedItems[0])
+            
+
+            filterValue = int(lbl_filter_value['text'])
+            selectedItem = selectedItems[0]
+            sensorLocation = getLocation(selectedItems[0])
+
+            peaks, filtered_acc, filterValue = automaticPeakFinder(df, filterValue, selectedItem, sensorLocation, filterVar1.get())
+
             self.df = df
-           
-            sensorLocation = int(lbl_filter_value['text'])
 
-            if (filterVar1.get() == 1):
-                print("DEBUUUUUUUUUG")
-                bestFilter = 0
-                highestPeaksAmount = 0
-                for i in range(35, 55):
-                    averageDifference = 0
-                    tempdf = readFileIntoDF(selectedItems[0])
-                    filtered_acceleration = getFilteredData(tempdf, i)
-                    tempdf.insert(len(tempdf.columns), "filtered_acc", filtered_acceleration)
-                    filtered_acceleration = tempdf.filtered_acc
-
-                    temppeaks = getPeaks(
-                    selectedItems[0], filtered_acceleration, getLocation(selectedItems[0]))
-                    self.peakSelector.queue = []
-                    self.peakSelector.current = 0
-                    self.peakSelector.setPeaks(temppeaks)
-                    self.infoStr = self.peakSelector.info
-
-                    filtered_acceleration = tempdf.filtered_acc
-
-                    for j in range(1, len(temppeaks)):
-                        averageDifference += abs(filtered_acceleration[temppeaks[j]] - filtered_acceleration[temppeaks[j - 1]])
-                    averageDifference = averageDifference / len(temppeaks)
-
-                    maxDifference = 0    
-                    autoPeaks = []
-                    averageValue = 0
-
-                    peaksHolder = temppeaks
-                    temppeaks = []
-                    previousPeak = None
-                    count = len(peaksHolder)
-                    for item in peaksHolder:
-                        count -= 1
-                        
-                        if filtered_acceleration[item] > averageValue:
-                            if previousPeak is None:
-                                previousPeak = item
-                            else:
-                                if abs(item - previousPeak) < 8:
-                                    if filtered_acceleration[item] > filtered_acceleration[previousPeak]:
-                                        previousPeak = item           
-                                else:
-                                    temppeaks.append(previousPeak)
-                                    previousPeak = item
-                        if count == 0 and temppeaks[len(temppeaks) - 1] != previousPeak:
-                            temppeaks.append(previousPeak)
-                  
-
-
-                    for i in range(1, len(temppeaks) - 1):
-                        minDifference = maxDifference * 0.20
-                        if filtered_acceleration[temppeaks[i - 1]] - filtered_acceleration[temppeaks[i]] > minDifference and filtered_acceleration[temppeaks[i + 1]] - filtered_acceleration[temppeaks[i]] > minDifference and filtered_acceleration[temppeaks[i]] > averageValue:
-                            autoPeaks.append(temppeaks[i])
-                            autoPeaks.append(temppeaks[i - 1])
-                            autoPeaks.append(temppeaks[i + 1])
-
-
-                    if len(autoPeaks) > highestPeaksAmount:
-                        highestPeaksAmount = len(autoPeaks)
-                        bestFilter = i
-
-                   
-                    
-                sensorLocation = bestFilter
-                print(sensorLocation)
-
-
-              
-
-
-
-            filtered_acc = getFilteredData(df, sensorLocation)
-
-            # This adds the time parameter
-            df.insert(len(df.columns), "filtered_acc", filtered_acc)
-            filtered_acc = df.filtered_acc
-
-            peaks = getPeaks(
-                selectedItems[0], filtered_acc, getLocation(selectedItems[0]))
             self.peakSelector.queue = []
             self.peakSelector.current = 0
             self.peakSelector.setPeaks(peaks)
             self.infoStr = self.peakSelector.info
 
-            filtered_acc = df.filtered_acc
             self.currentGraphTitle = lbl_selected['text']
-
-            maxDifference = 0    
-            autoPeaks = []
-            averageValue = 0
-
-            for i in range(1, len(peaks)):
-                difference = abs(filtered_acc[peaks[i]] - filtered_acc[peaks[i - 1]])
-                if difference > maxDifference:
-                    maxDifference = difference
-                
-            for item in peaks:
-                averageValue += filtered_acc[item]
-            averageValue = (averageValue / len(peaks)) * 0.84
-            print(averageValue)
-            print("maxval")
-            print(maxDifference)
-
-            peaksHolder = peaks
-            peaks = []
-            previousPeak = None
-            count = len(peaksHolder)
-            for item in peaksHolder:
-                count -= 1
-                
-                if filtered_acc[item] > averageValue:
-                    if previousPeak is None:
-                        previousPeak = item
-                    else:
-                        if abs(item - previousPeak) < 8:
-                            if filtered_acc[item] > filtered_acc[previousPeak]:
-                                previousPeak = item           
-                        else:
-                            peaks.append(previousPeak)
-                            previousPeak = item
-                if count == 0 and peaks[len(peaks) - 1] != previousPeak:
-                    peaks.append(previousPeak)
-            print(peaks)
-
-
-            for i in range(1, len(peaks) - 1):
-                minDifference = maxDifference * 0.20
-                if filtered_acc[peaks[i - 1]] - filtered_acc[peaks[i]] > minDifference and filtered_acc[peaks[i + 1]] - filtered_acc[peaks[i]] > minDifference and filtered_acc[peaks[i]] > averageValue:
-                    autoPeaks.append(peaks[i])
-                    autoPeaks.append(peaks[i - 1])
-                    autoPeaks.append(peaks[i + 1])
-
-
-
-
-            plotAccelerationWithPeaks(axes, filtered_acc, autoPeaks,self.currentGraphTitle)
-
+            plotAccelerationWithPeaks(axes, filtered_acc, peaks,self.currentGraphTitle)
+        
             figure_canvas.draw()
-
+            lastButton = "compareData"
+            btn_savePeaks.place(x=140, y=540, width=90, height=40)
+            btn_resetPeaks.place(x=250, y=540, width=90, height=40)
+            btn_help.place(x=360, y=540, width=90, height=40)
+            lbl_modifyPeaks.place(x=134, y=505)
+            slider_filter.place(x=200, y=475, width=200, height=25)
+            lbl_filter.place(x=245, y=450)
+            lbl_filter_value.place(x=329, y=450)
      
             
 
