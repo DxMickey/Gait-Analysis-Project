@@ -24,6 +24,7 @@ from tree import *
 from peakSelect import *
 import stumpy
 from automation import *
+from matrixprofile import *
 
 
 matplotlib.use("TkAgg")
@@ -570,26 +571,45 @@ class UI(tk.Tk):
             # This adds the time parameter
             df.insert(len(df.columns), "filtered_acc", filtered_acc)
             filtered_acc = df.filtered_acc
+            filtered_acc = np.array(filtered_acc)
 
-            m = 100
-            mp = stumpy.stump(filtered_acc, m)
 
-            motif_idx = np.argsort(mp[:, 0])[0]
-            nearest_neighbor_idx = mp[motif_idx, 1]
+            # Define the subsequence length (motif length)
+            m = 45
 
+           # Compute the matrix profile
+            matrix_profile = stumpy.stump(filtered_acc, m)
+
+            # Find the motifs above a certain threshold (change threshold to control the sensitivity)
+            threshold = 0.2
+            motif_indices = np.where(matrix_profile[:, 0] < threshold)[0]
+
+            # Compute the maximum value within each motif
+            max_values = [np.max(filtered_acc[motif_indices[i]:motif_indices[i] + m]) for i in range(len(motif_indices))]
+            max_threshold = 16 # Adjust the threshold as per your data
+
+            # Retain only the motifs whose maximum values exceed the threshold
+            filtered_indices = [i for i in range(len(motif_indices)) if max_values[i] > max_threshold]
+            filtered_motif_indices = [motif_indices[i] for i in filtered_indices]
+
+
+
+            # Plot the time series data
+            plt.figure(figsize=(10, 6))
+            plt.plot(filtered_acc, color='blue', label='Time Series Data')
+
+            # Highlight the detected motifs
+            for index in filtered_motif_indices:
+                plt.axvspan(index, index + m, color='lightcoral', alpha=0.3)
             
-            axes.plot(filtered_acc)
+            plt.xlabel("Time [cs]")
+            plt.ylabel("Acceleration [ms^2]")
+            plt.title('Detected motifs')
 
-            
-            rect = Rectangle((motif_idx, 0), m, 40, facecolor='yellow')
-            axes.add_patch(rect)
+            plt.grid(True, 'both')
+            plt.legend()
+            plt.show()
 
-            rect = Rectangle((nearest_neighbor_idx, 0), m, 40, facecolor='lightgrey')
-            axes.add_patch(rect)
-
-            axes.grid(True, 'both')
-            figure_canvas.draw()
-            lastButton = "compareData"
 
             
 

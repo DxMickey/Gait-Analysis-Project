@@ -23,8 +23,8 @@ def automaticPeakFinder(dataframe, selectedFilterValue, selectedItem, sensorLoca
     df.insert(len(df.columns), "filtered_acc", filtered_acc)
     filtered_acc = df.filtered_acc
 
-    #peaks, _ = find_peaks(filtered_acc, height = 16, distance = 15, prominence = 17)
-    peaks = getPeaks(selectedItem, filtered_acc, sensorLocation)
+    peaks, _ = find_peaks(filtered_acc, height = 16, distance = 15, prominence = 9)
+    #peaks = getPeaks(selectedItem, filtered_acc, sensorLocation)
 
     #Sinusoid testing
     #filtered_acc, peaks = generate_perfect_sinusoid()
@@ -32,11 +32,11 @@ def automaticPeakFinder(dataframe, selectedFilterValue, selectedItem, sensorLoca
 
     #RMSE
     #plot_rmse()
-    #plot_rmse_plus_phase()
+    plot_rmse_plus_phase()
 
     peaks = removePeaksUnderAverageValue(peaks, filtered_acc)
-    peaks = removeDuplicatePeaks(peaks, filtered_acc)
-    peaks = removeDuplicatePeaks(peaks, filtered_acc)
+    #peaks = removeDuplicatePeaks(peaks, filtered_acc)
+    #peaks = removeDuplicatePeaks(peaks, filtered_acc)
     peaks = removePeaksBeforeAndAfterGaitCycles(peaks, filtered_acc)
     peaks = removeInvalidPeaks(peaks, filtered_acc)
     
@@ -94,20 +94,21 @@ def plot_rmse():
         filtered_acc = pd.Series(filtered_acc, name='filtered_acc')
 
 
-        top_peaks, _ = find_peaks(filtered_acc, distance = 200, prominence = 2)
-        bottom_peaks, _ = find_peaks(filtered_acc, distance = 200, prominence = 2)
+        top_peaks, _ = find_peaks(filtered_acc, distance = 15, prominence = 0.1)
+        bottom_peaks, _ = find_peaks(-filtered_acc, distance = 15, prominence = 0.1)
 
         peaks = []
 
         peaks.extend(top_peaks)
         peaks.extend(bottom_peaks)
 
-        peaks = removePeaksUnderAverageValue(peaks, filtered_acc)
-        peaks = removeDuplicatePeaks(peaks, filtered_acc)
-        peaks = removePeaksBeforeAndAfterGaitCycles(peaks, filtered_acc)
+        #peaks = removePeaksUnderAverageValue(peaks, filtered_acc)
+        #peaks = removeDuplicatePeaks(peaks, filtered_acc)
+        #peaks = removePeaksBeforeAndAfterGaitCycles(peaks, filtered_acc)
         peaks = removeInvalidPeaks(peaks, filtered_acc)
+        #peaks = removePeaksUnderAverageValue(peaks, filtered_acc)
 
-        difference = len(peaks) - 8
+        difference = len(peaks) - 9
         squared_difference = np.square(difference)
         mean_squared_difference = np.mean(squared_difference)
         rmse.append(np.sqrt(mean_squared_difference))
@@ -145,20 +146,21 @@ def plot_rmse_plus_phase():
         filtered_acc = pd.Series(filtered_acc, name='filtered_acc')
 
 
-        top_peaks, _ = find_peaks(filtered_acc)
-        bottom_peaks, _ = find_peaks(-filtered_acc)
+        top_peaks, _ = find_peaks(filtered_acc, distance = 15, prominence = 0.1)
+        bottom_peaks, _ = find_peaks(-filtered_acc, distance = 15, prominence = 0.1)
 
         peaks = []
 
         peaks.extend(top_peaks)
         peaks.extend(bottom_peaks)
 
-        peaks = removePeaksUnderAverageValue(peaks, filtered_acc)
-        peaks = removeDuplicatePeaks(peaks, filtered_acc)
-        peaks = removePeaksBeforeAndAfterGaitCycles(peaks, filtered_acc)
+        #peaks = removePeaksUnderAverageValue(peaks, filtered_acc)
+        #peaks = removeDuplicatePeaks(peaks, filtered_acc)
         peaks = removeInvalidPeaks(peaks, filtered_acc)
+        #peaks = removePeaksBeforeAndAfterGaitCycles(peaks, filtered_acc)
+        
 
-        difference = len(peaks) - 8
+        difference = len(peaks) - 9
         squared_difference = np.square(difference)
         mean_squared_difference = np.mean(squared_difference)
         rmse.append(np.sqrt(mean_squared_difference))
@@ -215,7 +217,7 @@ def removeDuplicatePeaks(peaks, filtered_acc):
         if previous_peak is None:
             previous_peak = peak
         else:
-            if abs(peak - previous_peak) < 25 and filtered_acc[peak] > filtered_acc[previous_peak]:
+            if abs(peak - previous_peak) < 15 and filtered_acc[peak] > filtered_acc[previous_peak]:
                 previous_peak = peak
             else:
                 filtered_peaks.append(previous_peak)
@@ -233,6 +235,8 @@ def findAverageDistance(peaks, filtered_acc):
 
     # Calculate the average distance between the peaks
     distances = [abs(filtered_acc[i] - filtered_acc[j]) for i, j in zip(peaks, peaks[1:])]
+    if (len(distances) == 0):
+        return 0
     average_distance = sum(distances) / len(distances)
 
     return average_distance
@@ -240,19 +244,22 @@ def findAverageDistance(peaks, filtered_acc):
 
 def removePeaksBeforeAndAfterGaitCycles(peaks, filtered_acc):
     averageValue = findAverageValue(peaks, filtered_acc)
-    print(averageValue)
+
     gait_cycle_reached = False
-    gait_cycle_end_reached = False
     filtered_peaks = []
-    for item in peaks:
+    length = len(peaks)
+
+    for i, item in enumerate(peaks):
         if filtered_acc[item] > averageValue * 0.95 and not gait_cycle_reached:
              gait_cycle_reached = True
              filtered_peaks = []
+             print()
              print("start reached")
-        if filtered_acc[item] < averageValue * 0.77 and gait_cycle_reached and not gait_cycle_end_reached:
-            print(averageValue * 0.77)
-            print("end reached")
-            break
+        if i < length - 1:
+            if filtered_acc[item] < averageValue * 0.77 and gait_cycle_reached:
+                print(item)
+                print("end reached")
+                break
         filtered_peaks.append(item)
     return filtered_peaks
 
@@ -273,16 +280,17 @@ def findBestFilterValue(dataframe, selectedItem, sensorLocation):
         temp_df.insert(len(temp_df.columns), "filtered_acc", filtered_acceleration)
         filtered_acceleration = temp_df.filtered_acc
 
-        peaks = getPeaks(
-        selectedItem, filtered_acceleration, sensorLocation)
-        filtered_acceleration = temp_df.filtered_acc
+        #peaks = getPeaks(selectedItem, filtered_acceleration, sensorLocation)
+        peaks, _ = find_peaks(filtered_acceleration, height = 16, distance = 15, prominence = 9)
+
         
         
         peaks = removePeaksUnderAverageValue(peaks, filtered_acceleration)
-        peaks = removeDuplicatePeaks(peaks, filtered_acceleration)
-        peaks = removeDuplicatePeaks(peaks, filtered_acceleration)
+        #peaks = removeDuplicatePeaks(peaks, filtered_acceleration)
+        #peaks = removeDuplicatePeaks(peaks, filtered_acceleration)
         peaks = removePeaksBeforeAndAfterGaitCycles(peaks, filtered_acceleration)
         peaks = removeInvalidPeaks(peaks, filtered_acceleration)
+
 
         averageDistance = findAverageDistance(peaks, filtered_acceleration)
  
