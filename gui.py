@@ -340,8 +340,11 @@ class UI(tk.Tk):
                 additionalDataTable(sensorID, table, subjectName, sensorLoc, sensorCon, fileDate),
                 toSQL(dFrame, table)
 
+                detectGaitCycles(table)
+
                 count += 1
             dataBox.destroy()
+            refreshTree()
 
         def getLocation(table):
             """
@@ -479,6 +482,23 @@ class UI(tk.Tk):
                 itemNames = saveText
             joinItems2 = saveText
 
+        def detectGaitCycles(tableName):
+            
+            df = readFileIntoDF(tableName)
+            
+            filterValue = int(lbl_filter_value['text'])
+            sensorLocation = getLocation(tableName)
+
+            peaks, filtered_acc, filterValue = automaticPeakFinder(df, filterValue, tableName, sensorLocation)
+
+            self.df = df
+
+            peaks.sort()
+
+            createPeaks(tableName)
+            for peak in peaks:
+                insertPeaks(tableName, peak)
+
            
 
         def findPeaks():
@@ -574,19 +594,19 @@ class UI(tk.Tk):
             filtered_acc = np.array(filtered_acc)
 
 
-            # Define the subsequence length (motif length)
-            m = 45
+            # Define the motif length
+            m = 100
 
            # Compute the matrix profile
             matrix_profile = stumpy.stump(filtered_acc, m)
 
-            # Find the motifs above a certain threshold (change threshold to control the sensitivity)
-            threshold = 0.2
+            # Find the motifs above a certain threshold
+            threshold = 1.5
             motif_indices = np.where(matrix_profile[:, 0] < threshold)[0]
 
             # Compute the maximum value within each motif
             max_values = [np.max(filtered_acc[motif_indices[i]:motif_indices[i] + m]) for i in range(len(motif_indices))]
-            max_threshold = 16 # Adjust the threshold as per your data
+            max_threshold = 20 # Adjust the threshold as per your data
 
             # Retain only the motifs whose maximum values exceed the threshold
             filtered_indices = [i for i in range(len(motif_indices)) if max_values[i] > max_threshold]
@@ -596,7 +616,7 @@ class UI(tk.Tk):
 
             # Plot the time series data
             plt.figure(figsize=(10, 6))
-            plt.plot(filtered_acc, color='blue', label='Time Series Data')
+            plt.plot(filtered_acc, color=colorList[0])
 
             # Highlight the detected motifs
             for index in filtered_motif_indices:
@@ -832,10 +852,10 @@ class UI(tk.Tk):
             
 
             filterValue = int(lbl_filter_value['text'])
-            selectedItem = selectedItems[0]
             sensorLocation = getLocation(selectedItems[0])
 
-            peaks, filtered_acc, filterValue = automaticPeakFinder(df, filterValue, selectedItem, sensorLocation, filterVar1.get())
+            peaks, filtered_acc, filterValue = automaticPeakFinder(df, selectedItems[0], filterValue, sensorLocation)
+            
 
             self.df = df
 
@@ -1078,18 +1098,6 @@ class UI(tk.Tk):
 
         )
 
-        btn_autoGait = customtkinter.CTkButton(
-            text="Find automatically",
-            command=autoPeaks
-
-        )
-
-        btn_matrixPeaks = customtkinter.CTkButton(
-            text="Use matrix profiling",
-            command=matrixPeaks
-
-        )
-
         def slider_changed(val):
             """ 
             Check if any button was pressed before and update lbl_filter to new slider value
@@ -1119,8 +1127,6 @@ class UI(tk.Tk):
             variable=current_value
         )
 
-        filterVar1 = tk.IntVar()
-        filterChangeCbox = tk.Checkbutton(text='Find best filter value',variable=filterVar1, onvalue=1, offvalue=0)
 
         slider_filter.set(39)
 
@@ -1173,9 +1179,7 @@ class UI(tk.Tk):
         btn_enableDeviation.place(x=300, y=340, width=130, height=40)
         btn_altman.place(x=230, y=400, width=130, height=40)
         btn_joinGaits.place(x=230, y=600, width=130, height=40)
-        btn_autoGait.place(x=230, y=700, width=130, height=40)
-        btn_matrixPeaks.place(x=230, y=650, width=130, height=40)
-        filterChangeCbox.place(x=80, y=700, width=130, height=40)
+
 
 
 
