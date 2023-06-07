@@ -881,7 +881,7 @@ class UI(tk.Tk):
 
         def getJoined():
 
-            global lastButton, deviationMode
+            global lastButton, deviationMode, joinItems1, joinItems2
             
             
 
