@@ -1,5 +1,6 @@
 import matplotlib
 import os
+from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
 from plotter import *
 from matplotlib.backend_bases import key_press_handler
@@ -21,6 +22,10 @@ from pandas import DataFrame
 from errors import *
 from tree import *
 from peakSelect import *
+import stumpy
+from automation import *
+from matrixprofile import *
+
 
 matplotlib.use("TkAgg")
 
@@ -150,11 +155,13 @@ class UI(tk.Tk):
                 additionalData(0)
 
         def deleteSaves():
+
+            if tk.messagebox.askyesno("Confirmation", "Are you sure that you want to delete currently selected files?"):
             
-            for item in selectedItems:
-                deleteAllSelectedData(item)
-                                        
-            refreshTree()
+                for item in selectedItems:
+                    deleteAllSelectedData(item)
+                                            
+                refreshTree()
 
             
 
@@ -333,8 +340,11 @@ class UI(tk.Tk):
                 additionalDataTable(sensorID, table, subjectName, sensorLoc, sensorCon, fileDate),
                 toSQL(dFrame, table)
 
+                detectGaitCycles(table)
+
                 count += 1
             dataBox.destroy()
+            refreshTree()
 
         def getLocation(table):
             """
@@ -472,6 +482,23 @@ class UI(tk.Tk):
                 itemNames = saveText
             joinItems2 = saveText
 
+        def detectGaitCycles(tableName):
+            
+            df = readFileIntoDF(tableName)
+            
+            filterValue = int(lbl_filter_value['text'])
+            sensorLocation = getLocation(tableName)
+
+            peaks, filtered_acc, filterValue = automaticPeakFinder(df, filterValue, tableName, sensorLocation)
+
+            self.df = df
+
+            peaks.sort()
+
+            createPeaks(tableName)
+            for peak in peaks:
+                insertPeaks(tableName, peak)
+
            
 
         def findPeaks():
@@ -546,6 +573,64 @@ class UI(tk.Tk):
             slider_filter.place(x=200, y=475, width=200, height=25)
             lbl_filter.place(x=245, y=450)
             lbl_filter_value.place(x=329, y=450)
+
+        def matrixPeaks():
+
+            """
+            Method for finding peaks and cycles using matrix profiling
+            """
+
+            global lastButton, selectedItems
+            axes.clear()
+            df = readFileIntoDF(selectedItems[0])
+            self.df = df
+
+            sensorLocation = int(lbl_filter_value['text'])
+            filtered_acc = getFilteredData(df, sensorLocation)
+
+            # This adds the time parameter
+            df.insert(len(df.columns), "filtered_acc", filtered_acc)
+            filtered_acc = df.filtered_acc
+            filtered_acc = np.array(filtered_acc)
+
+
+            # Define the motif length
+            m = 100
+
+           # Compute the matrix profile
+            matrix_profile = stumpy.stump(filtered_acc, m)
+
+            # Find the motifs above a certain threshold
+            threshold = 1.5
+            motif_indices = np.where(matrix_profile[:, 0] < threshold)[0]
+
+            # Compute the maximum value within each motif
+            max_values = [np.max(filtered_acc[motif_indices[i]:motif_indices[i] + m]) for i in range(len(motif_indices))]
+            max_threshold = 20 # Adjust the threshold as per your data
+
+            # Retain only the motifs whose maximum values exceed the threshold
+            filtered_indices = [i for i in range(len(motif_indices)) if max_values[i] > max_threshold]
+            filtered_motif_indices = [motif_indices[i] for i in filtered_indices]
+
+
+
+            # Plot the time series data
+            plt.figure(figsize=(10, 6))
+            plt.plot(filtered_acc, color=colorList[0])
+
+            # Highlight the detected motifs
+            for index in filtered_motif_indices:
+                plt.axvspan(index, index + m, color='lightcoral', alpha=0.3)
+            
+            plt.xlabel("Time [cs]")
+            plt.ylabel("Acceleration [ms^2]")
+            plt.title('Detected motifs')
+
+            plt.grid(True, 'both')
+            plt.legend()
+            plt.show()
+
+
             
 
         def compareGaits():
@@ -759,9 +844,44 @@ class UI(tk.Tk):
             scrollbar1.place(x=620, y=100, height=227)
             scrollbar2.place(x=1230, y=100, height=227)
 
+        def autoPeaks():
+            global lastButton, selectedItems
+            axes.clear()
+            
+            df = readFileIntoDF(selectedItems[0])
+            
+
+            filterValue = int(lbl_filter_value['text'])
+            sensorLocation = getLocation(selectedItems[0])
+
+            peaks, filtered_acc, filterValue = automaticPeakFinder(df, selectedItems[0], filterValue, sensorLocation)
+            
+
+            self.df = df
+
+            self.peakSelector.queue = []
+            self.peakSelector.current = 0
+            self.peakSelector.setPeaks(peaks)
+            self.infoStr = self.peakSelector.info
+
+            self.currentGraphTitle = lbl_selected['text']
+            plotAccelerationWithPeaks(axes, filtered_acc, peaks,self.currentGraphTitle)
+        
+            figure_canvas.draw()
+            lastButton = "compareData"
+            btn_savePeaks.place(x=140, y=540, width=90, height=40)
+            btn_resetPeaks.place(x=250, y=540, width=90, height=40)
+            btn_help.place(x=360, y=540, width=90, height=40)
+            lbl_modifyPeaks.place(x=134, y=505)
+            slider_filter.place(x=200, y=475, width=200, height=25)
+            lbl_filter.place(x=245, y=450)
+            lbl_filter_value.place(x=329, y=450)
+     
+            
+
         def getJoined():
 
-            global lastButton, deviationMode
+            global lastButton, deviationMode, joinItems1, joinItems2
             
             
 
@@ -882,6 +1002,7 @@ class UI(tk.Tk):
             popup.mainloop()
 
         btn_insertData = customtkinter.CTkButton(
+            self,
             text="Save new data",
 
             command=lambda: insertData(0)
@@ -889,6 +1010,7 @@ class UI(tk.Tk):
         )
 
         btn_Peaks = customtkinter.CTkButton(
+            
             text="Show raw data",
             command=findPeaks
 
@@ -1005,6 +1127,7 @@ class UI(tk.Tk):
             variable=current_value
         )
 
+
         slider_filter.set(39)
 
         frame = tk.Frame(self)
@@ -1056,6 +1179,7 @@ class UI(tk.Tk):
         btn_enableDeviation.place(x=300, y=340, width=130, height=40)
         btn_altman.place(x=230, y=400, width=130, height=40)
         btn_joinGaits.place(x=230, y=600, width=130, height=40)
+
 
 
 
